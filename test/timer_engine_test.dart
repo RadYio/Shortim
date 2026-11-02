@@ -80,8 +80,7 @@ void main() {
 
   group('interval transitions', () {
     test('moves to the next interval exactly when the current one ends', () {
-      final engine = TimerEngine(seriesOf([5, 10]), clock: clock.call)
-        ..start();
+      final engine = TimerEngine(seriesOf([5, 10]), clock: clock.call)..start();
       clock.advance(const Duration(milliseconds: 4999));
       expect(engine.tick().whereType<IntervalChanged>(), isEmpty);
       expect(engine.snapshot.intervalIndex, 0);
@@ -93,8 +92,7 @@ void main() {
     });
 
     test('exposes the next interval duration, null on the last one', () {
-      final engine = TimerEngine(seriesOf([5, 30]), clock: clock.call)
-        ..start();
+      final engine = TimerEngine(seriesOf([5, 30]), clock: clock.call)..start();
       expect(engine.snapshot.nextDuration, const Duration(seconds: 30));
       expect(engine.snapshot.isLastStep, isFalse);
 
@@ -125,8 +123,7 @@ void main() {
     });
 
     test('pause processes transitions that were already due', () {
-      final engine = TimerEngine(seriesOf([5, 10]), clock: clock.call)
-        ..start();
+      final engine = TimerEngine(seriesOf([5, 10]), clock: clock.call)..start();
       clock.advance(const Duration(seconds: 6));
       expect(engine.pause(), contains(const IntervalChanged(1)));
       expect(engine.snapshot.remaining, const Duration(seconds: 9));
@@ -135,8 +132,7 @@ void main() {
 
   group('countdown beeps', () {
     test('beeps once at T-3, T-2 and T-1 of each interval', () {
-      final engine = TimerEngine(seriesOf([10, 5]), clock: clock.call)
-        ..start();
+      final engine = TimerEngine(seriesOf([10, 5]), clock: clock.call)..start();
       final events = run(engine, clock, const Duration(seconds: 15));
       expect(events, const [
         CountdownBeep(3),
@@ -201,10 +197,13 @@ void main() {
       expect(engine.snapshot.rounds, 3);
 
       final events = run(engine, clock, const Duration(seconds: 30));
-      expect(
-        events.whereType<IntervalChanged>().map((e) => e.step),
-        [1, 2, 3, 4, 5],
-      );
+      expect(events.whereType<IntervalChanged>().map((e) => e.step), [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ]);
       expect(events.whereType<CountdownBeep>(), hasLength(18));
       expect(events.last, const SeriesFinished());
     });
@@ -259,10 +258,7 @@ void main() {
       final state = TimerEngine(
         seriesOf([5, 5, 5], loopMode: LoopMode.repeatN, loopCount: 2),
       ).runState;
-      final bigger = TimerRunState.fromJson({
-        ...state.toJson(),
-        'step': 5,
-      });
+      final bigger = TimerRunState.fromJson({...state.toJson(), 'step': 5});
       expect(
         () => TimerEngine.restore(seriesOf([5]), bigger),
         throwsArgumentError,

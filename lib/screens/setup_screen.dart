@@ -32,6 +32,13 @@ class _SetupScreenState extends State<SetupScreen> {
   LoopMode _loopMode = LoopMode.once;
   int _loopCount = _defaultRepeatCount;
 
+  /// Intervals playing their exit animation: already out of the series, but
+  /// still in [_intervals] until the card has collapsed.
+  final Set<String> _removing = {};
+
+  /// Interval whose card should play its entrance animation.
+  String? _appearingId;
+
   @override
   void initState() {
     super.initState();
@@ -46,8 +53,13 @@ class _SetupScreenState extends State<SetupScreen> {
     seconds: seconds ?? _defaultInterval.seconds,
   );
 
+  List<TimerInterval> get _active => [
+    for (final i in _intervals)
+      if (!_removing.contains(i.id)) i,
+  ];
+
   Series get _series => Series(
-    intervals: _intervals,
+    intervals: _active,
     loopMode: _loopMode,
     loopCount: _loopMode == LoopMode.repeatN ? _loopCount : 1,
   );
@@ -64,6 +76,7 @@ class _SetupScreenState extends State<SetupScreen> {
         _intervals = [
           for (final i in draft.intervals) i.copyWith(id: _nextId()),
         ];
+        _removing.clear();
         _selectedId = _intervals.first.id;
         _loopMode = draft.loopMode;
         if (draft.loopMode == LoopMode.repeatN) _loopCount = draft.loopCount;
@@ -112,7 +125,7 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   void _addInterval() {
-    if (_intervals.length >= Series.maxIntervals) {
+    if (_active.length >= Series.maxIntervals) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
@@ -131,6 +144,7 @@ class _SetupScreenState extends State<SetupScreen> {
     setState(() {
       _intervals.insert(_selectedIndex + 1, added);
       _selectedId = added.id;
+      _appearingId = added.id;
     });
   }
 
@@ -143,14 +157,26 @@ class _SetupScreenState extends State<SetupScreen> {
     });
   }
 
+  /// Takes the interval out of the series now; its card animates out and
+  /// [_finishRemoval] drops it from the list afterwards.
   void _remove(TimerInterval interval) {
-    if (_intervals.length <= 1) return;
+    final active = _active;
+    if (active.length <= 1 || _removing.contains(interval.id)) return;
     setState(() {
-      final index = _intervals.indexOf(interval);
-      _intervals.removeAt(index);
+      final index = active.indexOf(interval);
+      _removing.add(interval.id);
       if (interval.id == _selectedId) {
-        _selectedId = _intervals[index.clamp(0, _intervals.length - 1)].id;
+        active.removeAt(index);
+        _selectedId = active[index.clamp(0, active.length - 1)].id;
       }
+    });
+  }
+
+  void _finishRemoval(String id) {
+    if (!mounted || !_removing.contains(id)) return;
+    setState(() {
+      _intervals.removeWhere((i) => i.id == id);
+      _removing.remove(id);
     });
   }
 
@@ -186,7 +212,8 @@ class _SetupScreenState extends State<SetupScreen> {
     final selectedIndex = _selectedIndex;
     final selected = _intervals[selectedIndex];
     final series = _series;
-    final hasEmpty = _intervals.any((i) => !i.isValid);
+    final active = _active;
+    final hasEmpty = active.any((i) => !i.isValid);
 
     return Scaffold(
       body: SafeArea(
@@ -198,26 +225,31 @@ class _SetupScreenState extends State<SetupScreen> {
               const SizedBox(height: 16),
               const _Wordmark(),
               const SizedBox(height: 24),
-              Text(
-                'INTERVALLE ${selectedIndex + 1}',
-                textAlign: TextAlign.center,
-                style: AppText.label(),
+              _Switch(
+                child: Text(
+                  'INTERVALLE ${active.indexOf(selected) + 1}',
+                  key: ValueKey(selected.id),
+                  textAlign: TextAlign.center,
+                  style: AppText.label(),
+                ),
               ),
               Row(
                 children: [
                   const SizedBox(width: 48),
                   Expanded(
-                    child: DurationPicker(
-                      key: ValueKey(selected.id),
-                      minutes: selected.minutes,
-                      seconds: selected.seconds,
-                      onChanged: _updateSelected,
+                    child: _Switch(
+                      child: DurationPicker(
+                        key: ValueKey(selected.id),
+                        minutes: selected.minutes,
+                        seconds: selected.seconds,
+                        onChanged: _updateSelected,
+                      ),
                     ),
                   ),
                   RoundIconButton(
                     icon: Icons.add,
                     tooltip: 'Ajouter un intervalle',
-                    enabled: _intervals.length < Series.maxIntervals,
+                    enabled: active.length < Series.maxIntervals,
                     onPressed: _addInterval,
                   ),
                 ],
@@ -228,9 +260,15 @@ class _SetupScreenState extends State<SetupScreen> {
               Expanded(
                 child: _IntervalList(
                   intervals: _intervals,
+                  removing: _removing,
+                  appearingId: _appearingId,
                   selectedId: _selectedId,
                   onSelect: (i) => setState(() => _selectedId = i.id),
                   onRemove: _remove,
+                  onRemoved: _finishRemoval,
+                  onAppeared: (id) {
+                    if (_appearingId == id) _appearingId = null;
+                  },
                   onReorder: _reorder,
                 ),
               ),
@@ -303,103 +341,274 @@ class _TotalDuration extends StatelessWidget {
   }
 }
 
+/// Cross-fades (with a slight scale) when the selected interval changes.
+class _Switch extends StatelessWidget {
+  const _Switch({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: AppMotion.base,
+      switchInCurve: AppMotion.brand,
+      switchOutCurve: AppMotion.brand.flipped,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          scale: Tween(begin: 0.96, end: 1.0).animate(animation),
+          child: child,
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
 class _IntervalList extends StatelessWidget {
   const _IntervalList({
     required this.intervals,
+    required this.removing,
+    required this.appearingId,
     required this.selectedId,
     required this.onSelect,
     required this.onRemove,
+    required this.onRemoved,
+    required this.onAppeared,
     required this.onReorder,
   });
 
   final List<TimerInterval> intervals;
+  final Set<String> removing;
+  final String? appearingId;
   final String selectedId;
   final ValueChanged<TimerInterval> onSelect;
   final ValueChanged<TimerInterval> onRemove;
+  final ValueChanged<String> onRemoved;
+  final ValueChanged<String> onAppeared;
   final ReorderCallback onReorder;
-
-  static const _cardRadius = 20.0;
 
   @override
   Widget build(BuildContext context) {
-    final canRemove = intervals.length > 1;
+    // Numbering skips cards that are animating out.
+    var n = 0;
+    final numbers = {
+      for (final i in intervals)
+        if (!removing.contains(i.id)) i.id: ++n,
+    };
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       itemCount: intervals.length,
       onReorderItem: onReorder,
-      proxyDecorator: (child, _, _) => Material(
-        color: AppColors.surfaceRaised,
-        borderRadius: BorderRadius.circular(_cardRadius),
-        child: child,
+      proxyDecorator: (child, _, animation) => AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) => Transform.scale(
+          scale: 1 + 0.03 * AppMotion.brand.transform(animation.value),
+          child: child,
+        ),
+        child: Material(type: MaterialType.transparency, child: child),
       ),
       itemBuilder: (context, index) {
         final interval = intervals[index];
-        final isSelected = interval.id == selectedId;
-        return Padding(
+        return _IntervalCard(
           key: ValueKey(interval.id),
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Material(
-            color: AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(_cardRadius),
-              side: BorderSide(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : AppColors.brand700,
-              ),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(_cardRadius),
-              onTap: () => onSelect(interval),
+          interval: interval,
+          index: index,
+          number: numbers[interval.id],
+          selected: interval.id == selectedId,
+          removing: removing.contains(interval.id),
+          appearing: interval.id == appearingId,
+          canRemove: n > 1,
+          onTap: () => onSelect(interval),
+          onRemove: () => onRemove(interval),
+          onRemoved: () => onRemoved(interval.id),
+          onAppeared: () => onAppeared(interval.id),
+        );
+      },
+    );
+  }
+}
+
+/// One interval row. Enters with scale + fade + slide (emphasis), leaves
+/// with the symmetric motion while its height collapses.
+class _IntervalCard extends StatefulWidget {
+  const _IntervalCard({
+    super.key,
+    required this.interval,
+    required this.index,
+    required this.number,
+    required this.selected,
+    required this.removing,
+    required this.appearing,
+    required this.canRemove,
+    required this.onTap,
+    required this.onRemove,
+    required this.onRemoved,
+    required this.onAppeared,
+  });
+
+  final TimerInterval interval;
+  final int index;
+
+  /// Position shown to the user; null while animating out.
+  final int? number;
+  final bool selected;
+  final bool removing;
+  final bool appearing;
+  final bool canRemove;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+  final VoidCallback onRemoved;
+  final VoidCallback onAppeared;
+
+  @override
+  State<_IntervalCard> createState() => _IntervalCardState();
+}
+
+class _IntervalCardState extends State<_IntervalCard>
+    with SingleTickerProviderStateMixin {
+  static const _radius = 20.0;
+  static final _scale = Tween(begin: 0.9, end: 1.0);
+  static final _slide = Tween(begin: const Offset(0, 0.25), end: Offset.zero);
+
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: AppMotion.slow,
+    reverseDuration: AppMotion.base,
+    value: widget.appearing ? 0 : 1,
+  );
+  late final _soft = CurvedAnimation(
+    parent: _controller,
+    curve: AppMotion.brand,
+    reverseCurve: AppMotion.brand.flipped,
+  );
+  late final _pop = CurvedAnimation(
+    parent: _controller,
+    curve: AppMotion.emphasis,
+    reverseCurve: AppMotion.brand.flipped,
+  );
+  late int _number = widget.number ?? widget.index + 1;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.removing) {
+      // Rebuilt (e.g. scrolled back) mid-removal: finish it at once.
+      _controller.value = 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) => widget.onRemoved());
+    } else if (widget.appearing) {
+      _controller.forward().then((_) => widget.onAppeared());
+    }
+  }
+
+  @override
+  void didUpdateWidget(_IntervalCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.number != null) _number = widget.number!;
+    if (widget.removing && !oldWidget.removing) {
+      _controller.reverse().then((_) {
+        if (mounted) widget.onRemoved();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _soft.dispose();
+    _pop.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizeTransition(
+      sizeFactor: _soft,
+      child: FadeTransition(
+        opacity: _soft,
+        child: ScaleTransition(
+          scale: _scale.animate(_pop),
+          child: SlideTransition(
+            position: _slide.animate(_pop),
+            child: IgnorePointer(
+              ignoring: widget.removing,
               child: Padding(
-                padding: const EdgeInsets.only(left: 20, top: 4, bottom: 4),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 40,
-                      child: Text(
-                        '${index + 1}.',
-                        style: AppText.mono(
-                          fontSize: 13,
-                          color: AppColors.brand500,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      formatDuration(interval.duration),
-                      style: AppText.mono(
-                        fontSize: 20,
-                        color: interval.isValid
-                            ? AppColors.text
-                            : AppColors.brand600,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (canRemove)
-                      IconButton(
-                        tooltip: 'Supprimer',
-                        icon: const Icon(Icons.close, size: 20),
-                        color: AppColors.brand500,
-                        onPressed: () => onRemove(interval),
-                      ),
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: const Padding(
-                        padding: EdgeInsets.fromLTRB(4, 12, 16, 12),
-                        child: Icon(
-                          Icons.drag_handle,
-                          color: AppColors.brand500,
-                          semanticLabel: 'Déplacer',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: _card(context),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _card(BuildContext context) {
+    final interval = widget.interval;
+    return AnimatedContainer(
+      duration: AppMotion.base,
+      curve: AppMotion.brand,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(_radius),
+        border: Border.all(
+          color: widget.selected
+              ? Theme.of(context).colorScheme.primary
+              : AppColors.brand700,
+        ),
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(_radius),
+          onTap: widget.onTap,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 4, bottom: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Text(
+                    '$_number.',
+                    style: AppText.mono(
+                      fontSize: 13,
+                      color: AppColors.brand500,
+                    ),
+                  ),
+                ),
+                Text(
+                  formatDuration(interval.duration),
+                  style: AppText.mono(
+                    fontSize: 20,
+                    color: interval.isValid
+                        ? AppColors.text
+                        : AppColors.brand600,
+                  ),
+                ),
+                const Spacer(),
+                if (widget.canRemove || widget.removing)
+                  IconButton(
+                    tooltip: 'Supprimer',
+                    icon: const Icon(Icons.close, size: 20),
+                    color: AppColors.brand500,
+                    onPressed: widget.onRemove,
+                  ),
+                ReorderableDragStartListener(
+                  index: widget.index,
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(4, 12, 16, 12),
+                    child: Icon(
+                      Icons.drag_handle,
+                      color: AppColors.brand500,
+                      semanticLabel: 'Déplacer',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

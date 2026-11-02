@@ -70,6 +70,21 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
   (Playfair Display 400, JetBrains Mono 400/500/700, licences OFL incluses)
   avec `allowRuntimeFetching = false` : aucun accès réseau, rendu identique
   hors ligne et en test. Accent réglable prévu via `buildTheme(accent:)`.
+- **Splash** (`lib/screens/splash_screen.dart`) : timeline du mark animé
+  reproduite en `CustomPainter` (`lib/widgets/shortim_mark.dart`, mêmes paths
+  que le SVG, tracé partiel via `PathMetric.extractPath`). Anneau 0–1,1 s
+  (`brand`), couronne 1,1–1,5 s, « clic » à ~1,9 s (couronne qui plonge puis
+  rebondit en `emphasis`, ticks qui flashent, aiguille), wordmark Playfair,
+  puis fondu+glissé vers la saisie (2,9 s au total, un tap passe). Variante
+  « lockup-essef » **non incluse** : le splash reste centré sur la marque
+  Shortim. Avec « Réduire les animations » iOS, le mark s'affiche fini.
+- **Animations de la liste d'intervalles** : `ReorderableListView` conservé
+  (drag natif, réinsertion animée) ; chaque carte gère son entrée (scale +
+  fade + slide en `emphasis`, hauteur en `brand`) et sa sortie symétrique
+  (`brand.flipped`, 250 ms). Une suppression retire l'intervalle de la série
+  immédiatement, la carte reste jusqu'à la fin de sa sortie. Carte en cours de
+  drag : léger agrandissement. Changement d'intervalle sélectionné : fondu +
+  scale du sélecteur ; bouton « + » : rétraction au toucher, rebond au relâché.
 - **Icône iOS** générée depuis `assets/logos/shortim-app-icon-1024.svg`
   (rendu PNG sans alpha, toutes tailles de l'`AppIcon.appiconset`) ; fond du
   launch screen passé en `ink`.

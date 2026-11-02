@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'screens/setup_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/sound_service.dart';
 import 'services/storage_service.dart';
 import 'theme.dart';
@@ -30,7 +31,9 @@ class ShortimApp extends StatelessWidget {
       title: 'Shortim',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(),
-      home: SetupScreen(sounds: sounds, storage: storage),
+      home: SplashScreen(
+        next: (_) => SetupScreen(sounds: sounds, storage: storage),
+      ),
     );
   }
 }

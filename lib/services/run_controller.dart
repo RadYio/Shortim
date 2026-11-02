@@ -34,6 +34,11 @@ class RunController extends ChangeNotifier {
   TimerEngine _engine;
   Timer? _ticker;
   bool _disposed = false;
+  final _events = StreamController<TimerEvent>.broadcast();
+
+  /// The event each sound was played for, emitted on the same tick so the
+  /// UI can animate in sync with it. Silent (restored) ticks emit nothing.
+  Stream<TimerEvent> get events => _events.stream;
 
   TimerSnapshot get snapshot => _engine.snapshot;
   TimerStatus get status => _engine.status;
@@ -49,7 +54,9 @@ class RunController extends ChangeNotifier {
     }
     _handle(_engine.tick(), silent: restored);
     if (_engine.status == TimerStatus.finished) return;
-    await _setActive(true);
+    // Keep-alive runs in background: the countdown never waits on platform
+    // calls (which may be slow, or never answer in widget tests).
+    unawaited(_setActive(true));
     _startTicker();
     _persist();
     notifyListeners();
@@ -99,17 +106,28 @@ class RunController extends ChangeNotifier {
     if (events.isEmpty) return;
     if (events.any((e) => e is SeriesFinished)) {
       _ticker?.cancel();
-      if (!silent) unawaited(sounds.finish());
+      if (!silent) {
+        unawaited(sounds.finish());
+        _emit(const SeriesFinished());
+      }
       unawaited(_setActive(false));
       unawaited(storage.clearRun());
       return;
     }
     if (silent) return;
-    if (events.any((e) => e is IntervalChanged)) {
+    final change = events.whereType<IntervalChanged>().lastOrNull;
+    final beep = events.whereType<CountdownBeep>().lastOrNull;
+    if (change != null) {
       unawaited(sounds.intervalChange());
-    } else if (events.any((e) => e is CountdownBeep)) {
+      _emit(change);
+    } else if (beep != null) {
       unawaited(sounds.beep());
+      _emit(beep);
     }
+  }
+
+  void _emit(TimerEvent event) {
+    if (!_events.isClosed) _events.add(event);
   }
 
   void _persist() {
@@ -135,6 +153,7 @@ class RunController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _ticker?.cancel();
+    unawaited(_events.close());
     unawaited(_setActive(false));
     super.dispose();
   }

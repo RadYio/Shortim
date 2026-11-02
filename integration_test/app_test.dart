@@ -38,8 +38,10 @@ void main() {
     expect(find.text('3 fois'), findsOneWidget);
     expect(find.text('Durée totale : 03:00  (3 × 01:00)'), findsOneWidget);
 
+    // The run screen repaints every frame while running: it never settles.
     await tester.tap(find.text('Démarrer'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('INTERVALLE 1/2'), findsOneWidget);
     expect(find.text('TOUR 1/3'), findsOneWidget);
     expect(find.text('Suivant : 00:30'), findsOneWidget);
@@ -56,7 +58,8 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.text('Arrêter'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.widgetWithText(TextButton, 'Arrêter'));
     await tester.pumpAndSettle();
     expect(find.text('Démarrer'), findsOneWidget);

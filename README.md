@@ -85,6 +85,22 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
   immédiatement, la carte reste jusqu'à la fin de sa sortie. Carte en cours de
   drag : léger agrandissement. Changement d'intervalle sélectionné : fondu +
   scale du sélecteur ; bouton « + » : rétraction au toucher, rebond au relâché.
+- **Écran d'exécution** (`lib/screens/run_screen.dart`) : anneau
+  `CustomPainter` dont la fraction restante est relue sur l'horloge murale à
+  chaque frame (`Ticker`, actif seulement pendant que le timer tourne, donc
+  aucun coût en pause). `RunController.events` émet le bip / changement /
+  fin **au même tick que le son** : pulse (scale + halo flou) sur T-3/T-2/T-1,
+  pulse + remplissage de l'anneau + fondu-scale des chiffres au changement
+  d'intervalle. Pause : anneau et chiffres glissent vers le gris (`slow`,
+  `brand`), retour à l'accent à la reprise. Fin : l'anneau se referme d'un
+  trait, léger halo, puis « Terminé » (Playfair) entre en `emphasis`.
+- **Transitions** : `fadeSlideRoute` (fondu + glissé de 4 %, `slow` à
+  l'aller, `base` au retour) pour splash → saisie et saisie ↔ exécution.
+- **Keep-alive non bloquant** : `RunController.start()` démarre le décompte
+  sans attendre wakelock/session audio (appels plateforme lancés en fond).
+- Tests : l'écran d'exécution repeint à chaque frame tant qu'il tourne, donc
+  `pumpAndSettle` y est remplacé par des `pump` de durée fixe ;
+  `test/run_screen_test.dart` pilote une horloge factice (`RunScreen.clock`).
 - **Icône iOS** générée depuis `assets/logos/shortim-app-icon-1024.svg`
   (rendu PNG sans alpha, toutes tailles de l'`AppIcon.appiconset`) ; fond du
   launch screen passé en `ink`.

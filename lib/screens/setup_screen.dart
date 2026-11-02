@@ -9,6 +9,7 @@ import '../services/timer_engine.dart';
 import '../theme.dart';
 import '../widgets/duration_picker.dart';
 import '../widgets/round_icon_button.dart';
+import '../widgets/transitions.dart';
 import 'run_screen.dart';
 
 /// Screen 1: build the series (intervals + repetition) and start it.
@@ -196,8 +197,8 @@ class _SetupScreenState extends State<SetupScreen> {
 
   void _openRun(Series series, {TimerRunState? restoreFrom}) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => RunScreen(
+      fadeSlideRoute<void>(
+        (_) => RunScreen(
           series: series,
           sounds: widget.sounds,
           storage: widget.storage,

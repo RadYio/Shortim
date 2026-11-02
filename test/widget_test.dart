@@ -3,27 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shortim/main.dart';
 import 'package:shortim/screens/splash_screen.dart';
-import 'package:shortim/services/sound_service.dart';
 import 'package:shortim/services/storage_service.dart';
 
-class FakeSoundService implements SoundService {
-  final played = <String>[];
-
-  @override
-  Future<void> init() async {}
-  @override
-  Future<void> beep() async => played.add('beep');
-  @override
-  Future<void> intervalChange() async => played.add('change');
-  @override
-  Future<void> finish() async => played.add('finish');
-  @override
-  Future<void> startKeepAlive() async {}
-  @override
-  Future<void> stopKeepAlive() async {}
-  @override
-  Future<void> dispose() async {}
-}
+import 'fakes.dart';
 
 void main() {
   setUpAll(configureFonts);
@@ -37,6 +19,13 @@ void main() {
       ShortimApp(sounds: FakeSoundService(), storage: StorageService()),
     );
     if (settle) await tester.pumpAndSettle();
+  }
+
+  /// The run screen repaints every frame while running, so it never
+  /// settles: pump through a page transition instead.
+  Future<void> pumpTransition(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
   }
 
   /// Opacity of the nearest entrance/exit fade above [finder].
@@ -65,7 +54,7 @@ void main() {
     expect(find.text('Durée totale : 02:00  (2 × 01:00)'), findsOneWidget);
 
     await tester.tap(find.text('Démarrer'));
-    await tester.pumpAndSettle();
+    await pumpTransition(tester);
 
     expect(find.text('INTERVALLE 1/2'), findsOneWidget);
     expect(find.text('TOUR 1/2'), findsOneWidget);

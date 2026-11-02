@@ -25,6 +25,7 @@ class FakeSoundService implements SoundService {
 }
 
 void main() {
+  setUpAll(configureFonts);
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   Future<void> pumpApp(WidgetTester tester) async {
@@ -57,8 +58,8 @@ void main() {
     await tester.tap(find.text('Démarrer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Intervalle 1/2'), findsOneWidget);
-    expect(find.text('Tour 1/2'), findsOneWidget);
+    expect(find.text('INTERVALLE 1/2'), findsOneWidget);
+    expect(find.text('TOUR 1/2'), findsOneWidget);
     expect(find.text('Suivant : 00:30'), findsOneWidget);
     expect(find.text('00:30'), findsOneWidget);
 

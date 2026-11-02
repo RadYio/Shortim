@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// Circular white-outlined icon button. When [enabled] is false it is drawn
+/// Circular accent-outlined icon button. When [enabled] is false it is drawn
 /// dimmed but stays tappable, so callers can explain why it is unavailable.
 class RoundIconButton extends StatelessWidget {
   const RoundIconButton({
@@ -22,7 +22,9 @@ class RoundIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled ? AppColors.white : AppColors.faint;
+    final color = enabled
+        ? Theme.of(context).colorScheme.primary
+        : AppColors.brand700;
     return Tooltip(
       message: tooltip,
       child: Semantics(
@@ -38,7 +40,7 @@ class RoundIconButton extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: color, width: 1.5),
+              border: Border.all(color: color),
             ),
             child: Icon(icon, color: color, size: size * 0.5),
           ),

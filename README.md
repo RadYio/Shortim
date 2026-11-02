@@ -65,6 +65,17 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
 - **Session audio iOS** : catégorie `playback` + `mixWithOthers` (la musique
   de l'utilisateur continue), mode d'arrière-plan `audio` dans `Info.plist`.
 - `wakelock_plus` garde l'écran allumé pendant le run.
+- **DA** (`lib/theme.dart`) : tokens couleurs/motion/typo de `CLAUDE.md` §1.
+  Polices via `google_fonts` mais **embarquées** dans `assets/google_fonts/`
+  (Playfair Display 400, JetBrains Mono 400/500/700, licences OFL incluses)
+  avec `allowRuntimeFetching = false` : aucun accès réseau, rendu identique
+  hors ligne et en test. Accent réglable prévu via `buildTheme(accent:)`.
+- **Icône iOS** générée depuis `assets/logos/shortim-app-icon-1024.svg`
+  (rendu PNG sans alpha, toutes tailles de l'`AppIcon.appiconset`) ; fond du
+  launch screen passé en `ink`.
+- Build simulateur : utiliser `flutter run -d <simulateur>` ; `flutter build
+  ios --simulator` échoue ici (framework Flutter arm64 seul, l'outil attend
+  arm64+x86_64).
 
 ## Arrière-plan iOS : fonctionnement et limites
 

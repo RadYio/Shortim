@@ -130,11 +130,7 @@ class _Progress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const style = TextStyle(
-      fontSize: 16,
-      color: AppColors.muted,
-      fontFeatures: tabularFigures,
-    );
+    final style = AppText.label();
     return Column(
       children: [
         Row(
@@ -142,14 +138,14 @@ class _Progress extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                'Intervalle ${snapshot.intervalIndex + 1}/${snapshot.intervalCount}',
+                'INTERVALLE ${snapshot.intervalIndex + 1}/${snapshot.intervalCount}',
                 style: style,
               ),
             ),
             if (snapshot.rounds > 1)
               Flexible(
                 child: Text(
-                  'Tour ${snapshot.round}/${snapshot.rounds}',
+                  'TOUR ${snapshot.round}/${snapshot.rounds}',
                   style: style,
                 ),
               ),
@@ -162,9 +158,7 @@ class _Progress extends StatelessWidget {
             value: snapshot.status == TimerStatus.finished
                 ? 1
                 : snapshot.progress.clamp(0, 1),
-            minHeight: 3,
-            color: AppColors.white,
-            backgroundColor: AppColors.faint,
+            minHeight: 2,
           ),
         ),
       ],
@@ -186,23 +180,18 @@ class _Countdown extends StatelessWidget {
           fit: BoxFit.scaleDown,
           child: Text(
             formatDuration(Duration(seconds: snapshot.secondsLeft)),
-            style: TextStyle(
-              fontSize: 120,
-              fontWeight: FontWeight.w200,
+            style: AppText.mono(
+              fontSize: 104,
+              fontWeight: FontWeight.w700,
               height: 1,
-              fontFeatures: tabularFigures,
-              color: paused ? AppColors.muted : AppColors.white,
+              letterSpacing: -4,
+              color: paused ? AppColors.brand500 : AppColors.text,
             ),
           ),
         ),
         SizedBox(
           height: 24,
-          child: paused
-              ? const Text(
-                  'EN PAUSE',
-                  style: TextStyle(letterSpacing: 4, color: AppColors.muted),
-                )
-              : null,
+          child: paused ? Text('EN PAUSE', style: AppText.label()) : null,
         ),
       ],
     );
@@ -225,7 +214,7 @@ class _NextLabel extends StatelessWidget {
     return Text(
       text,
       textAlign: TextAlign.center,
-      style: const TextStyle(fontSize: 26, fontFeatures: tabularFigures),
+      style: AppText.mono(fontSize: 20, color: AppColors.brand300),
     );
   }
 }

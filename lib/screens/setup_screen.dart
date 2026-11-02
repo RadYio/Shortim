@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/series.dart';
 import '../models/timer_interval.dart';
@@ -194,21 +195,13 @@ class _SetupScreenState extends State<SetupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 12),
-              const Text(
-                'SHORTIM',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 6,
-                  color: AppColors.muted,
-                ),
-              ),
               const SizedBox(height: 16),
+              const _Wordmark(),
+              const SizedBox(height: 24),
               Text(
-                'Intervalle ${selectedIndex + 1}',
+                'INTERVALLE ${selectedIndex + 1}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: AppColors.muted),
+                style: AppText.label(),
               ),
               Row(
                 children: [
@@ -255,7 +248,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   child: Text(
                     'Chaque intervalle doit durer au moins 1 seconde',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.muted, fontSize: 13),
+                    style: TextStyle(color: AppColors.brand400, fontSize: 13),
                   ),
                 ),
               FilledButton(
@@ -266,6 +259,27 @@ class _SetupScreenState extends State<SetupScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Wordmark extends StatelessWidget {
+  const _Wordmark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      header: true,
+      label: 'Shortim',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset('assets/logos/shortim-mark-white.svg', height: 30),
+          const SizedBox(width: 10),
+          Text('Shortim', style: AppText.wordmark(fontSize: 30)),
+        ],
       ),
     );
   }
@@ -284,7 +298,7 @@ class _TotalDuration extends StatelessWidget {
     return Text(
       'Durée totale : ${formatDuration(series.totalDuration)}$detail',
       textAlign: TextAlign.center,
-      style: const TextStyle(fontSize: 16, fontFeatures: tabularFigures),
+      style: AppText.mono(fontSize: 14, color: AppColors.brand300),
     );
   }
 }
@@ -304,6 +318,8 @@ class _IntervalList extends StatelessWidget {
   final ValueChanged<TimerInterval> onRemove;
   final ReorderCallback onReorder;
 
+  static const _cardRadius = 20.0;
+
   @override
   Widget build(BuildContext context) {
     final canRemove = intervals.length > 1;
@@ -312,8 +328,8 @@ class _IntervalList extends StatelessWidget {
       itemCount: intervals.length,
       onReorderItem: onReorder,
       proxyDecorator: (child, _, _) => Material(
-        color: AppColors.navyLight,
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.surfaceRaised,
+        borderRadius: BorderRadius.circular(_cardRadius),
         child: child,
       ),
       itemBuilder: (context, index) {
@@ -321,37 +337,41 @@ class _IntervalList extends StatelessWidget {
         final isSelected = interval.id == selectedId;
         return Padding(
           key: ValueKey(interval.id),
-          padding: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Material(
-            color: Colors.transparent,
+            color: AppColors.surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(_cardRadius),
               side: BorderSide(
-                color: isSelected ? AppColors.white : AppColors.faint,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : AppColors.brand700,
               ),
             ),
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(_cardRadius),
               onTap: () => onSelect(interval),
               child: Padding(
-                padding: const EdgeInsets.only(left: 16),
+                padding: const EdgeInsets.only(left: 20, top: 4, bottom: 4),
                 child: Row(
                   children: [
                     SizedBox(
-                      width: 36,
+                      width: 40,
                       child: Text(
                         '${index + 1}.',
-                        style: const TextStyle(color: AppColors.muted),
+                        style: AppText.mono(
+                          fontSize: 13,
+                          color: AppColors.brand500,
+                        ),
                       ),
                     ),
                     Text(
                       formatDuration(interval.duration),
-                      style: TextStyle(
+                      style: AppText.mono(
                         fontSize: 20,
-                        fontFeatures: tabularFigures,
                         color: interval.isValid
-                            ? AppColors.white
-                            : AppColors.faint,
+                            ? AppColors.text
+                            : AppColors.brand600,
                       ),
                     ),
                     const Spacer(),
@@ -359,16 +379,16 @@ class _IntervalList extends StatelessWidget {
                       IconButton(
                         tooltip: 'Supprimer',
                         icon: const Icon(Icons.close, size: 20),
-                        color: AppColors.muted,
+                        color: AppColors.brand500,
                         onPressed: () => onRemove(interval),
                       ),
                     ReorderableDragStartListener(
                       index: index,
                       child: const Padding(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.fromLTRB(4, 12, 16, 12),
                         child: Icon(
                           Icons.drag_handle,
-                          color: AppColors.muted,
+                          color: AppColors.brand500,
                           semanticLabel: 'Déplacer',
                         ),
                       ),
@@ -434,10 +454,7 @@ class _LoopSelector extends StatelessWidget {
                   child: Text(
                     '$count fois',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontFeatures: tabularFigures,
-                    ),
+                    style: AppText.mono(fontSize: 20),
                   ),
                 ),
                 RoundIconButton(

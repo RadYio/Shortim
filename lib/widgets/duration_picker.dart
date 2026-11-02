@@ -50,7 +50,7 @@ class _DurationPickerState extends State<DurationPicker> {
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               ':',
-              style: TextStyle(fontSize: 32, color: AppColors.white),
+              style: TextStyle(fontSize: 30, color: AppColors.brand500),
             ),
           ),
           _wheelSlot(
@@ -130,11 +130,7 @@ class _WheelState extends State<_Wheel> {
                   Center(
                     child: Text(
                       i.toString().padLeft(2, '0'),
-                      style: const TextStyle(
-                        fontSize: 34,
-                        color: AppColors.white,
-                        fontFeatures: tabularFigures,
-                      ),
+                      style: AppText.mono(fontSize: 32),
                     ),
                   ),
               ],
@@ -144,7 +140,7 @@ class _WheelState extends State<_Wheel> {
               child: IgnorePointer(
                 child: Text(
                   widget.label,
-                  style: const TextStyle(fontSize: 14, color: AppColors.muted),
+                  style: AppText.mono(fontSize: 12, color: AppColors.brand500),
                 ),
               ),
             ),
@@ -163,7 +159,7 @@ class _SelectionOverlay extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         border: Border.symmetric(
-          horizontal: BorderSide(color: AppColors.faint),
+          horizontal: BorderSide(color: AppColors.brand700),
         ),
       ),
     );

@@ -10,6 +10,7 @@ import 'package:shortim/services/storage_service.dart';
 /// plugins: `flutter test integration_test -d <device>`.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  configureFonts();
 
   testWidgets('full flow with real plugins', (tester) async {
     final prefs = await SharedPreferences.getInstance();
@@ -39,8 +40,8 @@ void main() {
 
     await tester.tap(find.text('Démarrer'));
     await tester.pumpAndSettle();
-    expect(find.text('Intervalle 1/2'), findsOneWidget);
-    expect(find.text('Tour 1/3'), findsOneWidget);
+    expect(find.text('INTERVALLE 1/2'), findsOneWidget);
+    expect(find.text('TOUR 1/3'), findsOneWidget);
     expect(find.text('Suivant : 00:30'), findsOneWidget);
 
     // Let it run for real (screenshot window), then pause / resume.

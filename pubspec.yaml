@@ -37,6 +37,8 @@ dependencies:
   audioplayers: ^6.8.1
   wakelock_plus: ^1.8.2
   shared_preferences: ^2.5.6
+  google_fonts: ^8.2.1
+  flutter_svg: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +66,8 @@ flutter:
 
   assets:
     - assets/sounds/
+    - assets/logos/
+    - assets/google_fonts/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

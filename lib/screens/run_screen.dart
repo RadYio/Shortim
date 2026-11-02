@@ -5,9 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../l10n/l10n.dart';
 import '../models/series.dart';
 import '../models/timer_interval.dart';
 import '../services/run_controller.dart';
+import '../services/settings_controller.dart';
 import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../services/timer_engine.dart';
@@ -45,7 +47,11 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
     storage: widget.storage,
     restoreFrom: widget.restoreFrom,
     clock: widget.clock,
+    feedback: () => _feedback,
   );
+
+  /// Sound / haptics as currently set (defaults outside a [SettingsScope]).
+  FeedbackOptions _feedback = (sound: true, haptics: false);
 
   /// Fraction of the current interval still to run, sampled from the wall
   /// clock on every frame while running, so the ring never steps.
@@ -86,6 +92,15 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
     _controller.addListener(_onChange);
     _onChange();
     unawaited(_controller.start());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final settings = SettingsScope.maybeOf(context)?.settings;
+    if (settings != null) {
+      _feedback = (sound: settings.soundEnabled, haptics: settings.haptics);
+    }
   }
 
   @override
@@ -154,15 +169,15 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
     final stop = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Arrêter la série ?'),
+        title: Text(context.l10n.stopTitle),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Continuer'),
+            child: Text(context.l10n.continueRun),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Arrêter'),
+            child: Text(context.l10n.stop),
           ),
         ],
       ),
@@ -261,14 +276,17 @@ class _Progress extends StatelessWidget {
       children: [
         Flexible(
           child: Text(
-            'INTERVALLE ${snapshot.intervalIndex + 1}/${snapshot.intervalCount}',
+            context.l10n.runInterval(
+              snapshot.intervalIndex + 1,
+              snapshot.intervalCount,
+            ),
             style: style,
           ),
         ),
         if (snapshot.rounds > 1)
           Flexible(
             child: Text(
-              'TOUR ${snapshot.round}/${snapshot.rounds}',
+              context.l10n.runRound(snapshot.round, snapshot.rounds),
               style: style,
             ),
           ),
@@ -355,7 +373,7 @@ class _Dial extends StatelessWidget {
                                         ? Opacity(
                                             opacity: dim,
                                             child: Text(
-                                              'EN PAUSE',
+                                              context.l10n.paused,
                                               style: AppText.label(),
                                             ),
                                           )
@@ -371,7 +389,7 @@ class _Dial extends StatelessWidget {
                             child: Transform.scale(
                               scale: 0.85 + 0.15 * done,
                               child: Text(
-                                'Terminé',
+                                context.l10n.done,
                                 style: AppText.wordmark(fontSize: 44),
                               ),
                             ),
@@ -518,9 +536,10 @@ class _NextLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = switch (snapshot) {
       TimerSnapshot(status: TimerStatus.finished) => '',
-      TimerSnapshot(nextDuration: final next?) =>
-        'Suivant : ${formatDuration(next)}',
-      _ => 'Dernier intervalle',
+      TimerSnapshot(nextDuration: final next?) => context.l10n.nextInterval(
+        formatDuration(next),
+      ),
+      _ => context.l10n.lastInterval,
     };
     return Text(
       text,
@@ -548,14 +567,14 @@ class _RunActions extends StatelessWidget {
         Expanded(
           child: FilledButton(
             onPressed: onTogglePause,
-            child: Text(paused ? 'Reprendre' : 'Pause'),
+            child: Text(paused ? context.l10n.resume : context.l10n.pause),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: OutlinedButton(
             onPressed: onStop,
-            child: const Text('Arrêter'),
+            child: Text(context.l10n.stop),
           ),
         ),
       ],
@@ -576,14 +595,14 @@ class _FinishedActions extends StatelessWidget {
         Expanded(
           child: FilledButton(
             onPressed: onRestart,
-            child: const Text('Relancer'),
+            child: Text(context.l10n.restart),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: OutlinedButton(
             onPressed: onNew,
-            child: const Text('Nouvelle série'),
+            child: Text(context.l10n.newSeries),
           ),
         ),
       ],

@@ -1,12 +1,15 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shortim/l10n/l10n.dart';
 import 'package:shortim/main.dart';
 import 'package:shortim/models/series.dart';
 import 'package:shortim/models/timer_interval.dart';
 import 'package:shortim/screens/run_screen.dart';
+import 'package:shortim/services/settings_controller.dart';
 import 'package:shortim/services/storage_service.dart';
 import 'package:shortim/theme.dart';
 
@@ -37,6 +40,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildTheme(),
+        locale: const Locale('fr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: RunScreen(
           series: Series(intervals: [TimerInterval(id: 'a', seconds: 4)]),
           sounds: sounds,
@@ -117,5 +123,57 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Terminé'), findsNothing);
     expect(find.text('00:04'), findsOneWidget);
+  });
+
+  testWidgets('settings decide between sound and haptics', (tester) async {
+    final haptics = <Object?>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          haptics.add(call.arguments);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final settings = SettingsController(StorageService());
+    await settings.update(
+      (s) => s.copyWith(soundEnabled: false, haptics: true),
+    );
+    clock = FakeClock();
+    sounds = FakeSoundService();
+    await tester.pumpWidget(
+      SettingsScope(
+        notifier: settings,
+        child: MaterialApp(
+          locale: const Locale('fr'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: RunScreen(
+            series: Series(intervals: [TimerInterval(id: 'a', seconds: 4)]),
+            sounds: sounds,
+            storage: StorageService(),
+            clock: clock.call,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await elapse(tester, const Duration(milliseconds: 1100)); // T-3
+    await elapse(tester, const Duration(seconds: 4)); // End.
+
+    expect(sounds.played, isEmpty);
+    expect(haptics, [
+      'HapticFeedbackType.mediumImpact', // Start (interval change).
+      'HapticFeedbackType.lightImpact', // T-3 beep.
+      'HapticFeedbackType.heavyImpact', // End of series.
+    ]);
+    await tester.pumpAndSettle();
   });
 }

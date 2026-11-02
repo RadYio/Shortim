@@ -17,6 +17,9 @@ void main() {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
+    // A French device: auto-detection picks French.
+    tester.platformDispatcher.localesTestValue = [const Locale('fr', 'FR')];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     await tester.pumpWidget(
       ShortimApp(sounds: FakeSoundService(), storage: StorageService()),
     );

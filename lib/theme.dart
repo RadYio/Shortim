@@ -199,6 +199,23 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
       selectionColor: accentColor.withValues(alpha: 0.3),
       selectionHandleColor: accentColor,
     ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? AppColors.ink
+            : AppColors.brand400,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? accentColor
+            : AppColors.surfaceRaised,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? accentColor
+            : AppColors.brand600,
+      ),
+    ),
     popupMenuTheme: const PopupMenuThemeData(
       color: AppColors.surfaceRaised,
       surfaceTintColor: Colors.transparent,

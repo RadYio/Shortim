@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/saved_series.dart';
 import '../models/series.dart';
+import '../l10n/l10n.dart';
 import '../models/timer_interval.dart';
 import '../services/series_library.dart';
 import '../services/sound_service.dart';
@@ -15,6 +16,7 @@ import '../widgets/series_name_dialog.dart';
 import '../widgets/transitions.dart';
 import 'library_screen.dart';
 import 'run_screen.dart';
+import 'settings_screen.dart';
 
 /// Screen 1: build the series (intervals + repetition) and start it.
 class SetupScreen extends StatefulWidget {
@@ -104,16 +106,16 @@ class _SetupScreenState extends State<SetupScreen> {
     final resume = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Série interrompue'),
-        content: const Text('Une série était en cours. La reprendre ?'),
+        title: Text(context.l10n.interruptedTitle),
+        content: Text(context.l10n.interruptedBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Non'),
+            child: Text(context.l10n.no),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reprendre'),
+            child: Text(context.l10n.resume),
           ),
         ],
       ),
@@ -141,8 +143,8 @@ class _SetupScreenState extends State<SetupScreen> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text('${Series.maxIntervals} intervalles maximum'),
+          SnackBar(
+            content: Text(context.l10n.maxIntervals(Series.maxIntervals)),
           ),
         );
       return;
@@ -206,8 +208,8 @@ class _SetupScreenState extends State<SetupScreen> {
     final name = await showSeriesNameDialog(
       context,
       library: _library,
-      title: 'Enregistrer la série',
-      confirmLabel: 'Enregistrer',
+      title: context.l10n.saveSeriesTitle,
+      confirmLabel: context.l10n.save,
       initial: _savedName ?? '',
     );
     if (name == null || !mounted) return;
@@ -220,7 +222,9 @@ class _SetupScreenState extends State<SetupScreen> {
       ..showSnackBar(
         SnackBar(
           content: Text(
-            '« ${saved.name} » ${replaced ? 'mise à jour' : 'enregistrée'}',
+            replaced
+                ? context.l10n.updatedSnack(saved.name)
+                : context.l10n.savedSnack(saved.name),
           ),
         ),
       );
@@ -232,6 +236,22 @@ class _SetupScreenState extends State<SetupScreen> {
     final choice = await Navigator.of(context).push(
       fadeSlideRoute<LibraryChoice>((_) => LibraryScreen(library: _library)),
     );
+    await _apply(choice);
+  }
+
+  Future<void> _openSettings() async {
+    await _libraryReady;
+    if (!mounted) return;
+    final choice = await Navigator.of(context).push(
+      fadeSlideRoute<LibraryChoice>(
+        (_) => SettingsScreen(sounds: widget.sounds, library: _library),
+      ),
+    );
+    await _apply(choice);
+  }
+
+  /// A series picked in "Mes séries" (directly or from the settings).
+  Future<void> _apply(LibraryChoice? choice) async {
     if (choice == null || !mounted) return;
     _load(choice.saved);
     if (choice.launch) await _start();
@@ -299,9 +319,18 @@ class _SetupScreenState extends State<SetupScreen> {
                 children: [
                   const _Wordmark(),
                   Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      tooltip: context.l10n.settings,
+                      icon: const Icon(Icons.settings_outlined),
+                      color: AppColors.brand300,
+                      onPressed: _openSettings,
+                    ),
+                  ),
+                  Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
-                      tooltip: 'Mes séries',
+                      tooltip: context.l10n.mySeries,
                       icon: const Icon(Icons.bookmarks_outlined),
                       color: AppColors.brand300,
                       onPressed: _openLibrary,
@@ -312,7 +341,7 @@ class _SetupScreenState extends State<SetupScreen> {
               const SizedBox(height: 24),
               _Switch(
                 child: Text(
-                  'INTERVALLE ${active.indexOf(selected) + 1}',
+                  context.l10n.intervalLabel(active.indexOf(selected) + 1),
                   key: ValueKey(selected.id),
                   textAlign: TextAlign.center,
                   style: AppText.label(),
@@ -333,7 +362,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                   RoundIconButton(
                     icon: Icons.add,
-                    tooltip: 'Ajouter un intervalle',
+                    tooltip: context.l10n.addInterval,
                     enabled: active.length < Series.maxIntervals,
                     onPressed: _addInterval,
                   ),
@@ -364,12 +393,15 @@ class _SetupScreenState extends State<SetupScreen> {
               ),
               const SizedBox(height: 16),
               if (hasEmpty)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    'Chaque intervalle doit durer au moins 1 seconde',
+                    context.l10n.emptyIntervalWarning,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.brand400, fontSize: 13),
+                    style: const TextStyle(
+                      color: AppColors.brand400,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               Row(
@@ -377,14 +409,14 @@ class _SetupScreenState extends State<SetupScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: series.isValid ? _save : null,
-                      child: const Text('Enregistrer'),
+                      child: Text(context.l10n.save),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
                       onPressed: series.isValid ? _start : null,
-                      child: const Text('Démarrer'),
+                      child: Text(context.l10n.start),
                     ),
                   ),
                 ],
@@ -426,11 +458,15 @@ class _TotalDuration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final detail = series.rounds > 1
-        ? '  (${series.rounds} × ${formatDuration(series.roundDuration)})'
-        : '';
+    final total = formatDuration(series.totalDuration);
     return Text(
-      'Durée totale : ${formatDuration(series.totalDuration)}$detail',
+      series.rounds > 1
+          ? context.l10n.totalDurationRounds(
+              total,
+              series.rounds,
+              formatDuration(series.roundDuration),
+            )
+          : context.l10n.totalDuration(total),
       textAlign: TextAlign.center,
       style: AppText.mono(fontSize: 14, color: AppColors.brand300),
     );
@@ -684,19 +720,19 @@ class _IntervalCardState extends State<_IntervalCard>
                 const Spacer(),
                 if (widget.canRemove || widget.removing)
                   IconButton(
-                    tooltip: 'Supprimer',
+                    tooltip: context.l10n.removeInterval,
                     icon: const Icon(Icons.close, size: 20),
                     color: AppColors.brand500,
                     onPressed: widget.onRemove,
                   ),
                 ReorderableDragStartListener(
                   index: widget.index,
-                  child: const Padding(
-                    padding: EdgeInsets.fromLTRB(4, 12, 16, 12),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 12, 16, 12),
                     child: Icon(
                       Icons.drag_handle,
                       color: AppColors.brand500,
-                      semanticLabel: 'Déplacer',
+                      semanticLabel: context.l10n.moveInterval,
                     ),
                   ),
                 ),
@@ -730,11 +766,14 @@ class _LoopSelector extends StatelessWidget {
           width: double.infinity,
           child: SegmentedButton<LoopMode>(
             showSelectedIcon: false,
-            segments: const [
-              ButtonSegment(value: LoopMode.once, label: Text('1 fois')),
+            segments: [
+              ButtonSegment(
+                value: LoopMode.once,
+                label: Text(context.l10n.loopOnce),
+              ),
               ButtonSegment(
                 value: LoopMode.repeatN,
-                label: Text('Répéter x fois'),
+                label: Text(context.l10n.loopRepeat),
               ),
             ],
             selected: {mode},
@@ -749,7 +788,7 @@ class _LoopSelector extends StatelessWidget {
               children: [
                 RoundIconButton(
                   icon: Icons.remove,
-                  tooltip: 'Moins de répétitions',
+                  tooltip: context.l10n.fewerRepeats,
                   size: 40,
                   enabled: count > 1,
                   onPressed: count > 1 ? () => onCountChanged(count - 1) : null,
@@ -757,14 +796,14 @@ class _LoopSelector extends StatelessWidget {
                 SizedBox(
                   width: 120,
                   child: Text(
-                    '$count fois',
+                    context.l10n.loopCount(count),
                     textAlign: TextAlign.center,
                     style: AppText.mono(fontSize: 20),
                   ),
                 ),
                 RoundIconButton(
                   icon: Icons.add,
-                  tooltip: 'Plus de répétitions',
+                  tooltip: context.l10n.moreRepeats,
                   size: 40,
                   enabled: count < Series.maxLoopCount,
                   onPressed: count < Series.maxLoopCount

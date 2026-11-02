@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/saved_series.dart';
 import '../services/series_library.dart';
 import '../theme.dart';
@@ -88,11 +89,9 @@ class _SeriesNameDialogState extends State<_SeriesNameDialog> {
         textInputAction: TextInputAction.done,
         style: const TextStyle(fontSize: 17, color: AppColors.text),
         decoration: InputDecoration(
-          hintText: 'Muscu1',
-          helperText: clashes && !renaming
-              ? 'Une série porte déjà ce nom : elle sera remplacée.'
-              : null,
-          errorText: clashes && renaming ? 'Ce nom est déjà utilisé.' : null,
+          hintText: context.l10n.nameHint,
+          helperText: clashes && !renaming ? context.l10n.replaceHelper : null,
+          errorText: clashes && renaming ? context.l10n.nameTaken : null,
         ),
         onChanged: (_) => setState(() {}),
         onSubmitted: (_) => _confirm(),
@@ -100,11 +99,13 @@ class _SeriesNameDialogState extends State<_SeriesNameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(context.l10n.cancel),
         ),
         TextButton(
           onPressed: _canConfirm ? _confirm : null,
-          child: Text(clashes && !renaming ? 'Remplacer' : widget.confirmLabel),
+          child: Text(
+            clashes && !renaming ? context.l10n.replace : widget.confirmLabel,
+          ),
         ),
       ],
     );

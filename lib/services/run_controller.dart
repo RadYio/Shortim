@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../models/series.dart';
@@ -8,8 +9,12 @@ import 'sound_service.dart';
 import 'storage_service.dart';
 import 'timer_engine.dart';
 
-/// Glue between [TimerEngine] and the app: ticks the engine, plays sounds,
-/// keeps the screen/audio session alive and persists the run.
+/// What accompanies each cue, read when the cue fires (so a settings change
+/// applies mid-run).
+typedef FeedbackOptions = ({bool sound, bool haptics});
+
+/// Glue between [TimerEngine] and the app: ticks the engine, plays sounds
+/// and haptics, keeps the screen/audio session alive and persists the run.
 class RunController extends ChangeNotifier {
   RunController({
     required this.series,
@@ -17,7 +22,9 @@ class RunController extends ChangeNotifier {
     required this.storage,
     TimerRunState? restoreFrom,
     Clock? clock,
+    FeedbackOptions Function()? feedback,
   }) : _clock = clock,
+       _feedback = feedback ?? _soundOnly,
        _engine = restoreFrom == null
            ? TimerEngine(series, clock: clock)
            : TimerEngine.restore(series, restoreFrom, clock: clock);
@@ -30,6 +37,9 @@ class RunController extends ChangeNotifier {
   final SoundService sounds;
   final StorageService storage;
   final Clock? _clock;
+  final FeedbackOptions Function() _feedback;
+
+  static FeedbackOptions _soundOnly() => (sound: true, haptics: false);
 
   TimerEngine _engine;
   Timer? _ticker;
@@ -50,7 +60,7 @@ class RunController extends ChangeNotifier {
     final restored = _engine.status != TimerStatus.ready;
     if (!restored) {
       _engine.start();
-      unawaited(sounds.intervalChange());
+      _cue(const IntervalChanged(0));
     }
     _handle(_engine.tick(), silent: restored);
     if (_engine.status == TimerStatus.finished) return;
@@ -107,7 +117,7 @@ class RunController extends ChangeNotifier {
     if (events.any((e) => e is SeriesFinished)) {
       _ticker?.cancel();
       if (!silent) {
-        unawaited(sounds.finish());
+        _cue(const SeriesFinished());
         _emit(const SeriesFinished());
       }
       unawaited(_setActive(false));
@@ -118,11 +128,30 @@ class RunController extends ChangeNotifier {
     final change = events.whereType<IntervalChanged>().lastOrNull;
     final beep = events.whereType<CountdownBeep>().lastOrNull;
     if (change != null) {
-      unawaited(sounds.intervalChange());
+      _cue(change);
       _emit(change);
     } else if (beep != null) {
-      unawaited(sounds.beep());
+      _cue(beep);
       _emit(beep);
+    }
+  }
+
+  /// Sound and/or haptic for one event, as the settings allow.
+  void _cue(TimerEvent event) {
+    final options = _feedback();
+    if (options.sound) {
+      unawaited(switch (event) {
+        CountdownBeep() => sounds.beep(),
+        IntervalChanged() => sounds.intervalChange(),
+        SeriesFinished() => sounds.finish(),
+      });
+    }
+    if (options.haptics) {
+      unawaited(switch (event) {
+        CountdownBeep() => HapticFeedback.lightImpact(),
+        IntervalChanged() => HapticFeedback.mediumImpact(),
+        SeriesFinished() => HapticFeedback.heavyImpact(),
+      });
     }
   }
 

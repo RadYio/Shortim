@@ -39,6 +39,10 @@ dependencies:
   shared_preferences: ^2.5.6
   google_fonts: ^8.2.1
   flutter_svg: ^2.3.2
+  audio_session: ^0.2.4
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -64,8 +68,15 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Localizations generated from lib/l10n/*.arb (see l10n.yaml).
+  generate: true
+
   assets:
     - assets/sounds/
+    - assets/sounds/classic/
+    - assets/sounds/bell/
+    - assets/sounds/marimba/
+    - assets/sounds/pulse/
     - assets/logos/
     - assets/google_fonts/
 

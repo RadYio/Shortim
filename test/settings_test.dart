@@ -1,0 +1,188 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shortim/main.dart';
+import 'package:shortim/services/settings_controller.dart';
+import 'package:shortim/services/storage_service.dart';
+import 'package:shortim/theme.dart';
+
+import 'fakes.dart';
+
+void main() {
+  setUpAll(configureFonts);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  late FakeSoundService sounds;
+
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    Locale device = const Locale('fr', 'FR'),
+  }) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    tester.platformDispatcher.localesTestValue = [device];
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    sounds = FakeSoundService();
+    await tester.pumpWidget(
+      ShortimApp(sounds: sounds, storage: StorageService()),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Future<Map<String, dynamic>> storedSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    return jsonDecode(prefs.getString('settings')!) as Map<String, dynamic>;
+  }
+
+  Future<void> openSettings(
+    WidgetTester tester, {
+    String tooltip = 'Réglages',
+  }) async {
+    await tester.tap(find.byTooltip(tooltip));
+    await tester.pumpAndSettle();
+  }
+
+  /// The settings list is lazy and taller than the screen: scroll first.
+  Future<void> reveal(WidgetTester tester, Finder finder) async {
+    await tester.scrollUntilVisible(
+      finder,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Finder swatch(String name) => find.byWidgetPredicate(
+    (w) => w is Semantics && w.properties.label == name,
+  );
+
+  group('language', () {
+    testWidgets('follows a French device', (tester) async {
+      await pumpApp(tester);
+      expect(find.text('Démarrer'), findsOneWidget);
+    });
+
+    testWidgets('falls back to English on any other device', (tester) async {
+      await pumpApp(tester, device: const Locale('de', 'DE'));
+      expect(find.text('Start'), findsOneWidget);
+      expect(find.text('Total: 00:30'), findsOneWidget);
+    });
+
+    testWidgets('a manual choice applies at once and persists', (tester) async {
+      await pumpApp(tester);
+      await openSettings(tester);
+      expect(
+        find.text(
+          'Auto suit la langue de l\'appareil '
+          '(actuellement : Français).',
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('English'));
+      await tester.pumpAndSettle();
+      expect(find.text('Settings'), findsOneWidget); // No restart needed.
+      expect(find.text('LANGUAGE'), findsOneWidget);
+      expect((await storedSettings())['language'], 'en');
+
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.text('Start'), findsOneWidget);
+    });
+
+    testWidgets('the saved choice wins over the device on next launch', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'settings': jsonEncode({'language': 'en'}),
+      });
+      await pumpApp(tester); // French device.
+      expect(find.text('Start'), findsOneWidget);
+    });
+  });
+
+  testWidgets('accent colour switches the theme and persists', (tester) async {
+    await pumpApp(tester);
+    await openSettings(tester);
+
+    await reveal(tester, swatch('Or mat'));
+    await tester.tap(swatch('Or mat'));
+    await tester.pumpAndSettle();
+    final theme = Theme.of(tester.element(find.byType(Scaffold).last));
+    expect(theme.colorScheme.primary, AccentColor.gold.color);
+    expect((await storedSettings())['accent'], 'gold');
+  });
+
+  testWidgets('choosing a sound theme previews and applies it', (tester) async {
+    await pumpApp(tester);
+    await openSettings(tester);
+
+    await tester.tap(find.text('Marimba'));
+    await tester.pumpAndSettle();
+    expect(sounds.theme, SoundTheme.marimba);
+    expect(sounds.played, ['change']); // The preview.
+    expect((await storedSettings())['soundTheme'], 'marimba');
+
+    // Sound off: themes can no longer be picked.
+    await tester.tap(find.text('Sons'));
+    await tester.pumpAndSettle();
+    expect((await storedSettings())['soundEnabled'], false);
+    await tester.tap(find.text('Cloche douce'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(sounds.theme, SoundTheme.marimba);
+  });
+
+  testWidgets('vibrations toggle persists', (tester) async {
+    await pumpApp(tester);
+    await openSettings(tester);
+    await reveal(tester, find.text('Vibrations'));
+    await tester.tap(find.byType(Switch).last);
+    await tester.pumpAndSettle();
+    expect((await storedSettings())['haptics'], false);
+  });
+
+  testWidgets('"Gérer mes séries" opens the library; a pick loads it', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'saved_series': jsonEncode([
+        {
+          'id': 'j',
+          'name': 'Jambes',
+          'intervals': [
+            {'id': 'a', 'minutes': 1, 'seconds': 0},
+          ],
+          'loopMode': 'once',
+          'loopCount': 1,
+        },
+      ]),
+    });
+    await pumpApp(tester);
+    await openSettings(tester);
+
+    await reveal(tester, find.text('Gérer mes séries'));
+    await tester.tap(find.text('Gérer mes séries'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Jambes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Durée totale : 01:00'), findsOneWidget);
+  });
+
+  test('settings JSON round-trips, unknown values fall back', () {
+    const custom = AppSettings(
+      language: AppLanguage.en,
+      soundEnabled: false,
+      soundTheme: SoundTheme.pulse,
+      haptics: false,
+      accent: AccentColor.teal,
+    );
+    final back = AppSettings.fromJson(custom.toJson());
+    expect(back.toJson(), custom.toJson());
+
+    final odd = AppSettings.fromJson({'language': 'klingon', 'accent': 1});
+    expect(odd.toJson(), const AppSettings().toJson());
+  });
+}

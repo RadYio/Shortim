@@ -62,8 +62,46 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
   d'animation `Interval` de Flutter.
 - **Sons** : WAV synthétiques courts générés par script
   (`python3 tool/generate_sounds.py`), pas de dépendance à des fichiers tiers.
+  Quatre thèmes, un dossier chacun (`assets/sounds/<thème>/beep|change|
+  finish.wav`) : « Bip classique » (sons v1, identiques à l'octet), « Cloche
+  douce » (partiels inharmoniques, longue décroissance), « Marimba »
+  (fondamentale + partiels 4 et 10, attaque boisée), « Pulse électro » (carré
+  adouci, glissando, balayage montant). Dans chaque thème, le bip est court,
+  le changement est une montée à deux notes et la fin un arpège ; niveaux
+  normalisés pour que changer de thème ne change pas le volume perçu.
 - **Session audio iOS** : catégorie `playback` + `mixWithOthers` (la musique
   de l'utilisateur continue), mode d'arrière-plan `audio` dans `Info.plist`.
+- **Ducking** (`AudioplayersSoundService`, package `audio_session`) : autour
+  de chaque son la session passe en `mixWithOthers | duckOthers`, ce qui
+  baisse la musique **au niveau de la session système**, donc aussi en
+  Bluetooth/AirPlay. Les sons rapprochés (T-3, T-2, T-1, changement)
+  partagent un seul « duck » ; 700 ms après le dernier, la session est
+  désactivée avec `notifyOthersOnDeactivation` (seul moyen fiable sous iOS de
+  rendre le volume aux autres apps, qui remonte avec la rampe douce du
+  système) puis réactivée sans ducking. La boucle silencieuse de keep-alive
+  est mise en pause ces quelques millisecondes (iOS refuse de désactiver une
+  session qui joue). Les changements de session sont sérialisés.
+  **Limites** : une app tierce qui ignore le ducking système reste à plein
+  volume ; une app non mixable (rare pour la musique) peut être interrompue
+  plutôt que baissée ; pas de ducking sur Android (cible iOS). Vérifié sur
+  simulateur sans erreur de session, mais l'effet audible doit être contrôlé
+  sur un iPhone avec de la musique.
+- **Réglages** (`lib/screens/settings_screen.dart`,
+  `lib/services/settings_controller.dart`) : JSON dans `shared_preferences`
+  (clé `settings`), chargé **avant** le premier frame (pas de flash de langue
+  ou de couleur). Exposé via `SettingsScope` (`InheritedNotifier`). Son on/off
+  et vibrations sont lus **au moment de chaque signal** par `RunController`,
+  donc un changement en cours de série s'applique tout de suite. Vibrations :
+  légère au bip, moyenne au changement, forte à la fin. Choisir un thème le
+  fait écouter. Changement d'accent animé (transition de thème `slow`).
+  « Gérer mes séries » réutilise l'écran « Mes séries » ; une série choisie
+  remonte jusqu'à l'écran de saisie.
+- **Langue** : `flutter gen-l10n` (`l10n.yaml`, ARB dans `lib/l10n/`, fichiers
+  générés commités, gabarit français). « Auto » (défaut) suit la langue de
+  l'appareil : français si la langue préférée est le français, anglais
+  sinon ; un choix manuel est persistant et s'applique immédiatement (la
+  `MaterialApp` se reconstruit avec la nouvelle locale). Aucun texte visible
+  en dur dans les widgets (hors marque « Shortim » et chiffres).
 - `wakelock_plus` garde l'écran allumé pendant le run.
 - **DA** (`lib/theme.dart`) : tokens couleurs/motion/typo de `CLAUDE.md` §1.
   Polices via `google_fonts` mais **embarquées** dans `assets/google_fonts/`

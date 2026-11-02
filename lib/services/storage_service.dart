@@ -5,17 +5,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/saved_series.dart';
 import '../models/series.dart';
+import 'settings_controller.dart';
 import 'timer_engine.dart';
 
 /// A run persisted so it can be resumed if the app gets killed.
 typedef SavedRun = ({Series series, TimerRunState state});
 
-/// Local persistence: the last edited series, the run in progress and the
-/// saved series library.
+/// Local persistence: the last edited series, the run in progress, the
+/// saved series library and the settings.
 class StorageService {
   static const _draftKey = 'draft_series';
   static const _runKey = 'active_run';
   static const _libraryKey = 'saved_series';
+  static const _settingsKey = 'settings';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -85,4 +87,18 @@ class StorageService {
         _libraryKey,
         jsonEncode([for (final s in library) s.toJson()]),
       );
+
+  Future<AppSettings> loadSettings() async {
+    final raw = (await _prefs).getString(_settingsKey);
+    if (raw == null) return const AppSettings();
+    try {
+      return AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (e) {
+      debugPrint('Ignoring corrupted settings: $e');
+      return const AppSettings();
+    }
+  }
+
+  Future<void> saveSettings(AppSettings settings) async =>
+      (await _prefs).setString(_settingsKey, jsonEncode(settings.toJson()));
 }

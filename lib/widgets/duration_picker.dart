@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../l10n/l10n.dart';
 import '../theme.dart';
 
 /// Two looping wheels (minutes, seconds), each 0-59.
@@ -38,8 +39,8 @@ class _DurationPickerState extends State<DurationPicker> {
           _wheelSlot(
             _Wheel(
               initial: _minutes,
-              label: 'min',
-              semanticsLabel: 'Minutes',
+              label: context.l10n.minutesUnit,
+              semanticsLabel: context.l10n.minutesLabel,
               onSelected: (v) {
                 _minutes = v;
                 widget.onChanged(_minutes, _seconds);
@@ -56,8 +57,8 @@ class _DurationPickerState extends State<DurationPicker> {
           _wheelSlot(
             _Wheel(
               initial: _seconds,
-              label: 's',
-              semanticsLabel: 'Secondes',
+              label: context.l10n.secondsUnit,
+              semanticsLabel: context.l10n.secondsLabel,
               onSelected: (v) {
                 _seconds = v;
                 widget.onChanged(_minutes, _seconds);

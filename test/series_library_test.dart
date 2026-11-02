@@ -1,6 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shortim/models/saved_series.dart';
+import 'package:shortim/l10n/l10n.dart';
 import 'package:shortim/models/series.dart';
 import 'package:shortim/models/timer_interval.dart';
 import 'package:shortim/services/series_library.dart';
@@ -71,19 +72,22 @@ void main() {
     expect(library.items.single.name, 'Ok');
   });
 
-  test('summary reads "N intervalles · MM:SS · ×R"', () {
-    final saved = SavedSeries(
-      id: '1',
-      name: 'X',
-      series: Series(
-        intervals: [
-          TimerInterval(id: 'a', minutes: 1),
-          TimerInterval(id: 'b', seconds: 30),
-        ],
-        loopMode: LoopMode.repeatN,
-        loopCount: 3,
-      ),
+  test('summary reads "N intervalles · MM:SS · ×R", in each language', () {
+    final series = Series(
+      intervals: [
+        TimerInterval(id: 'a', minutes: 1),
+        TimerInterval(id: 'b', seconds: 30),
+      ],
+      loopMode: LoopMode.repeatN,
+      loopCount: 3,
     );
-    expect(saved.summary, '2 intervalles · 01:30 · ×3');
+    final fr = lookupAppLocalizations(const Locale('fr'));
+    final en = lookupAppLocalizations(const Locale('en'));
+    expect(seriesSummary(fr, series), '2 intervalles · 01:30 · ×3');
+    expect(seriesSummary(en, series), '2 intervals · 01:30 · ×3');
+
+    final single = Series(intervals: [TimerInterval(id: 'a', seconds: 45)]);
+    expect(seriesSummary(fr, single), '1 intervalle · 00:45');
+    expect(seriesSummary(en, single), '1 interval · 00:45');
   });
 }

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../models/saved_series.dart';
 import '../services/series_library.dart';
 import '../theme.dart';
@@ -55,8 +56,8 @@ class _LibraryScreenState extends State<LibraryScreen>
     final name = await showSeriesNameDialog(
       context,
       library: widget.library,
-      title: 'Renommer',
-      confirmLabel: 'Renommer',
+      title: context.l10n.rename,
+      confirmLabel: context.l10n.rename,
       initial: saved.name,
       renamingId: saved.id,
     );
@@ -80,9 +81,9 @@ class _LibraryScreenState extends State<LibraryScreen>
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('« ${saved.name} » supprimée'),
+          content: Text(context.l10n.deletedSnack(saved.name)),
           action: SnackBarAction(
-            label: 'Annuler',
+            label: context.l10n.undo,
             onPressed: () => _undoDelete(saved, index),
           ),
         ),
@@ -113,7 +114,7 @@ class _LibraryScreenState extends State<LibraryScreen>
               Row(
                 children: [
                   IconButton(
-                    tooltip: 'Retour',
+                    tooltip: context.l10n.back,
                     icon: const Icon(Icons.arrow_back_ios_new, size: 20),
                     color: AppColors.brand300,
                     onPressed: () => Navigator.pop(context),
@@ -121,7 +122,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'Mes séries',
+                      context.l10n.mySeries,
                       style: AppText.wordmark(fontSize: 32),
                     ),
                   ),
@@ -133,7 +134,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                   opacity: count > 0 ? 1 : 0,
                   duration: AppMotion.base,
                   child: Text(
-                    '$count ${count > 1 ? 'SÉRIES' : 'SÉRIE'}',
+                    context.l10n.seriesCount(count),
                     style: AppText.label(),
                   ),
                 ),
@@ -249,7 +250,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          saved.summary,
+                          seriesSummary(context.l10n, saved.series),
                           style: AppText.mono(
                             fontSize: 13,
                             color: AppColors.brand400,
@@ -260,12 +261,12 @@ class _LibraryScreenState extends State<LibraryScreen>
                   ),
                   RoundIconButton(
                     icon: Icons.play_arrow_rounded,
-                    tooltip: 'Lancer',
+                    tooltip: context.l10n.launch,
                     size: 44,
                     onPressed: () => _choose(saved, launch: true),
                   ),
                   PopupMenuButton<_Action>(
-                    tooltip: 'Options',
+                    tooltip: context.l10n.options,
                     icon: const Icon(
                       Icons.more_vert,
                       color: AppColors.brand400,
@@ -274,14 +275,14 @@ class _LibraryScreenState extends State<LibraryScreen>
                       _Action.rename => _rename(saved),
                       _Action.delete => _delete(saved),
                     },
-                    itemBuilder: (context) => const [
+                    itemBuilder: (context) => [
                       PopupMenuItem(
                         value: _Action.rename,
-                        child: Text('Renommer'),
+                        child: Text(context.l10n.rename),
                       ),
                       PopupMenuItem(
                         value: _Action.delete,
-                        child: Text('Supprimer'),
+                        child: Text(context.l10n.delete),
                       ),
                     ],
                   ),
@@ -314,15 +315,15 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Aucune série enregistrée',
-            style: TextStyle(fontSize: 17, color: AppColors.brand300),
+          Text(
+            context.l10n.emptyLibraryTitle,
+            style: const TextStyle(fontSize: 17, color: AppColors.brand300),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Composez une série puis touchez « Enregistrer ».',
+          Text(
+            context.l10n.emptyLibraryHint,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: AppColors.brand500),
+            style: const TextStyle(fontSize: 14, color: AppColors.brand500),
           ),
         ],
       ),

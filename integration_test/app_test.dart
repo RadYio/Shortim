@@ -15,6 +15,8 @@ void main() {
   testWidgets('full flow with real plugins', (tester) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
+    // The simulator's language is unknown: pin French, as the test expects.
+    await prefs.setString('settings', '{"language":"fr"}');
 
     await tester.pumpWidget(
       ShortimApp(sounds: AudioplayersSoundService(), storage: StorageService()),
@@ -79,5 +81,21 @@ void main() {
     await tester.tap(find.text('Muscu1'));
     await tester.pumpAndSettle();
     expect(find.text('Durée totale : 03:00  (3 × 01:00)'), findsOneWidget);
+
+    // Settings: preview a sound theme (real audio session + ducking), then
+    // switch the whole UI to English without restarting.
+    await tester.tap(find.byTooltip('Réglages'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Marimba'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() => Future.delayed(const Duration(seconds: 3)));
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
+    expect(find.text('Settings'), findsOneWidget);
+    await tester.runAsync(() => Future.delayed(const Duration(seconds: 2)));
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('Total: 03:00  (3 × 01:00)'), findsOneWidget);
   });
 }

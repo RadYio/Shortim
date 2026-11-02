@@ -155,11 +155,12 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
         color: AppColors.brand300,
       ),
     ),
-    snackBarTheme: const SnackBarThemeData(
+    snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.surfaceRaised,
-      contentTextStyle: TextStyle(color: AppColors.text),
+      actionTextColor: accentColor,
+      contentTextStyle: const TextStyle(color: AppColors.text),
       behavior: SnackBarBehavior.floating,
-      shape: StadiumBorder(side: BorderSide(color: AppColors.brand700)),
+      shape: const StadiumBorder(side: BorderSide(color: AppColors.brand700)),
     ),
     tooltipTheme: const TooltipThemeData(
       decoration: BoxDecoration(
@@ -171,6 +172,41 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: accentColor,
       linearTrackColor: AppColors.brand700,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surface,
+      hintStyle: const TextStyle(color: AppColors.brand600),
+      helperStyle: const TextStyle(color: AppColors.brand400),
+      helperMaxLines: 2,
+      counterStyle: AppText.mono(fontSize: 11, color: AppColors.brand500),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      border: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        borderSide: BorderSide(color: AppColors.brand700),
+      ),
+      enabledBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        borderSide: BorderSide(color: AppColors.brand700),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        borderSide: BorderSide(color: accentColor),
+      ),
+    ),
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: accentColor,
+      selectionColor: accentColor.withValues(alpha: 0.3),
+      selectionHandleColor: accentColor,
+    ),
+    popupMenuTheme: const PopupMenuThemeData(
+      color: AppColors.surfaceRaised,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        side: BorderSide(color: AppColors.brand700),
+      ),
+      textStyle: TextStyle(fontSize: 15, color: AppColors.text),
     ),
   );
 }

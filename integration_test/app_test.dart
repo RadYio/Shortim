@@ -63,5 +63,21 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Arrêter'));
     await tester.pumpAndSettle();
     expect(find.text('Démarrer'), findsOneWidget);
+
+    // Save the series, find it in "Mes séries" and load it back.
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Enregistrer'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Muscu1');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(TextButton, 'Enregistrer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Mes séries'));
+    await tester.pumpAndSettle();
+    expect(find.text('Muscu1'), findsOneWidget);
+    expect(find.text('2 intervalles · 01:00 · ×3'), findsOneWidget);
+    await tester.runAsync(() => Future.delayed(const Duration(seconds: 3)));
+    await tester.tap(find.text('Muscu1'));
+    await tester.pumpAndSettle();
+    expect(find.text('Durée totale : 03:00  (3 × 01:00)'), findsOneWidget);
   });
 }

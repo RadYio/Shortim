@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../models/saved_series.dart';
 import '../models/series.dart';
 import '../models/timer_interval.dart';
+import '../services/series_library.dart';
 import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../services/timer_engine.dart';
 import '../theme.dart';
 import '../widgets/duration_picker.dart';
 import '../widgets/round_icon_button.dart';
+import '../widgets/series_name_dialog.dart';
 import '../widgets/transitions.dart';
+import 'library_screen.dart';
 import 'run_screen.dart';
 
 /// Screen 1: build the series (intervals + repetition) and start it.
@@ -37,12 +41,19 @@ class _SetupScreenState extends State<SetupScreen> {
   /// still in [_intervals] until the card has collapsed.
   final Set<String> _removing = {};
 
-  /// Interval whose card should play its entrance animation.
-  String? _appearingId;
+  /// Intervals whose card should play its entrance animation.
+  final Set<String> _appearing = {};
+
+  late final _library = SeriesLibrary(widget.storage);
+  late final Future<void> _libraryReady = _library.load();
+
+  /// Name of the series last saved or loaded: pre-fills "Enregistrer".
+  String? _savedName;
 
   @override
   void initState() {
     super.initState();
+    _libraryReady.ignore(); // Starts loading; awaited where needed.
     _restore();
   }
 
@@ -145,7 +156,7 @@ class _SetupScreenState extends State<SetupScreen> {
     setState(() {
       _intervals.insert(_selectedIndex + 1, added);
       _selectedId = added.id;
-      _appearingId = added.id;
+      _appearing.add(added.id);
     });
   }
 
@@ -187,6 +198,62 @@ class _SetupScreenState extends State<SetupScreen> {
     });
   }
 
+  Future<void> _save() async {
+    final series = _series;
+    if (!series.isValid) return;
+    await _libraryReady;
+    if (!mounted) return;
+    final name = await showSeriesNameDialog(
+      context,
+      library: _library,
+      title: 'Enregistrer la série',
+      confirmLabel: 'Enregistrer',
+      initial: _savedName ?? '',
+    );
+    if (name == null || !mounted) return;
+    final replaced = _library.byName(name) != null;
+    final saved = await _library.save(name, series);
+    if (!mounted) return;
+    setState(() => _savedName = saved.name);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            '« ${saved.name} » ${replaced ? 'mise à jour' : 'enregistrée'}',
+          ),
+        ),
+      );
+  }
+
+  Future<void> _openLibrary() async {
+    await _libraryReady;
+    if (!mounted) return;
+    final choice = await Navigator.of(context).push(
+      fadeSlideRoute<LibraryChoice>((_) => LibraryScreen(library: _library)),
+    );
+    if (choice == null || !mounted) return;
+    _load(choice.saved);
+    if (choice.launch) await _start();
+  }
+
+  /// Fills the editor with a saved series; every card animates in.
+  void _load(SavedSeries saved) {
+    setState(() {
+      _intervals = [
+        for (final i in saved.series.intervals) i.copyWith(id: _nextId()),
+      ];
+      _removing.clear();
+      _appearing
+        ..clear()
+        ..addAll(_intervals.map((i) => i.id));
+      _selectedId = _intervals.first.id;
+      _loopMode = saved.series.loopMode;
+      if (_loopMode == LoopMode.repeatN) _loopCount = saved.series.loopCount;
+      _savedName = saved.name;
+    });
+  }
+
   Future<void> _start() async {
     final series = _series;
     if (!series.isValid) return;
@@ -217,6 +284,9 @@ class _SetupScreenState extends State<SetupScreen> {
     final hasEmpty = active.any((i) => !i.isValid);
 
     return Scaffold(
+      // Only the naming dialog shows a keyboard, and it moves itself above
+      // it: shrinking this fixed-height layout would just overflow it.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -224,7 +294,21 @@ class _SetupScreenState extends State<SetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 16),
-              const _Wordmark(),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  const _Wordmark(),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      tooltip: 'Mes séries',
+                      icon: const Icon(Icons.bookmarks_outlined),
+                      color: AppColors.brand300,
+                      onPressed: _openLibrary,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
               _Switch(
                 child: Text(
@@ -262,14 +346,12 @@ class _SetupScreenState extends State<SetupScreen> {
                 child: _IntervalList(
                   intervals: _intervals,
                   removing: _removing,
-                  appearingId: _appearingId,
+                  appearing: _appearing,
                   selectedId: _selectedId,
                   onSelect: (i) => setState(() => _selectedId = i.id),
                   onRemove: _remove,
                   onRemoved: _finishRemoval,
-                  onAppeared: (id) {
-                    if (_appearingId == id) _appearingId = null;
-                  },
+                  onAppeared: _appearing.remove,
                   onReorder: _reorder,
                 ),
               ),
@@ -290,9 +372,22 @@ class _SetupScreenState extends State<SetupScreen> {
                     style: TextStyle(color: AppColors.brand400, fontSize: 13),
                   ),
                 ),
-              FilledButton(
-                onPressed: series.isValid ? _start : null,
-                child: const Text('Démarrer'),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: series.isValid ? _save : null,
+                      child: const Text('Enregistrer'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: series.isValid ? _start : null,
+                      child: const Text('Démarrer'),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
             ],
@@ -370,7 +465,7 @@ class _IntervalList extends StatelessWidget {
   const _IntervalList({
     required this.intervals,
     required this.removing,
-    required this.appearingId,
+    required this.appearing,
     required this.selectedId,
     required this.onSelect,
     required this.onRemove,
@@ -381,7 +476,7 @@ class _IntervalList extends StatelessWidget {
 
   final List<TimerInterval> intervals;
   final Set<String> removing;
-  final String? appearingId;
+  final Set<String> appearing;
   final String selectedId;
   final ValueChanged<TimerInterval> onSelect;
   final ValueChanged<TimerInterval> onRemove;
@@ -418,7 +513,7 @@ class _IntervalList extends StatelessWidget {
           number: numbers[interval.id],
           selected: interval.id == selectedId,
           removing: removing.contains(interval.id),
-          appearing: interval.id == appearingId,
+          appearing: appearing.contains(interval.id),
           canRemove: n > 1,
           onTap: () => onSelect(interval),
           onRemove: () => onRemove(interval),

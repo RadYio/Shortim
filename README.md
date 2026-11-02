@@ -101,6 +101,18 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
 - Tests : l'écran d'exécution repeint à chaque frame tant qu'il tourne, donc
   `pumpAndSettle` y est remplacé par des `pump` de durée fixe ;
   `test/run_screen_test.dart` pilote une horloge factice (`RunScreen.clock`).
+- **Mes séries** (`lib/services/series_library.dart`,
+  `lib/screens/library_screen.dart`) : liste JSON dans `shared_preferences`
+  (clé `saved_series`, `{id, name, intervals, loopMode, loopCount}[]`) ; une
+  entrée corrompue est ignorée seule. Plus récente en premier. Noms comparés
+  sans casse ni espaces : enregistrer sous un nom existant **remplace** la
+  série (bouton « Remplacer » explicite dans le dialogue), renommer vers un
+  nom pris est refusé. Résumé « 8 intervalles · 12:30 · ×3 » = durée d'un
+  tour + nombre de tours. Toucher une carte charge la série dans l'écran de
+  saisie (modifiable), « Lancer » la charge puis démarre. Suppression sans
+  confirmation mais avec « Annuler » dans le snackbar. Cartes en cascade à
+  l'ouverture, entrée/sortie animées (`AnimatedList`). « Enregistrer » est
+  pré-rempli avec le nom de la dernière série chargée/enregistrée.
 - **Icône iOS** générée depuis `assets/logos/shortim-app-icon-1024.svg`
   (rendu PNG sans alpha, toutes tailles de l'`AppIcon.appiconset`) ; fond du
   launch screen passé en `ink`.

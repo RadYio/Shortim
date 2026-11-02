@@ -3,16 +3,19 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/saved_series.dart';
 import '../models/series.dart';
 import 'timer_engine.dart';
 
 /// A run persisted so it can be resumed if the app gets killed.
 typedef SavedRun = ({Series series, TimerRunState state});
 
-/// Local persistence: the last edited series and the run in progress.
+/// Local persistence: the last edited series, the run in progress and the
+/// saved series library.
 class StorageService {
   static const _draftKey = 'draft_series';
   static const _runKey = 'active_run';
+  static const _libraryKey = 'saved_series';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -53,4 +56,33 @@ class StorageService {
       );
 
   Future<void> clearRun() async => (await _prefs).remove(_runKey);
+
+  /// Saved series as a JSON list. A corrupted entry is skipped on its own
+  /// rather than losing the whole library.
+  Future<List<SavedSeries>> loadLibrary() async {
+    final raw = (await _prefs).getString(_libraryKey);
+    if (raw == null) return [];
+    final List<dynamic> list;
+    try {
+      list = jsonDecode(raw) as List<dynamic>;
+    } catch (e) {
+      debugPrint('Ignoring corrupted library: $e');
+      return [];
+    }
+    final library = <SavedSeries>[];
+    for (final entry in list) {
+      try {
+        library.add(SavedSeries.fromJson(entry as Map<String, dynamic>));
+      } catch (e) {
+        debugPrint('Ignoring corrupted saved series: $e');
+      }
+    }
+    return library;
+  }
+
+  Future<void> saveLibrary(List<SavedSeries> library) async =>
+      (await _prefs).setString(
+        _libraryKey,
+        jsonEncode([for (final s in library) s.toJson()]),
+      );
 }

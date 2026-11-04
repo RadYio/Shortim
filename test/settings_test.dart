@@ -109,12 +109,12 @@ void main() {
     await pumpApp(tester);
     await openSettings(tester);
 
-    await reveal(tester, swatch('Volt'));
-    await tester.tap(swatch('Volt'));
+    await reveal(tester, swatch('Sprint'));
+    await tester.tap(swatch('Sprint'));
     await tester.pumpAndSettle();
     final theme = Theme.of(tester.element(find.byType(Scaffold).last));
-    expect(theme.colorScheme.primary, AppPalette.volt.accent2);
-    expect((await storedSettings())['palette'], 'volt');
+    expect(theme.colorScheme.primary, AppPalette.sprint.accent2);
+    expect((await storedSettings())['palette'], 'sprint');
   });
 
   testWidgets('choosing a sound theme previews and applies it', (tester) async {
@@ -213,7 +213,7 @@ void main() {
       // this is the scenario that would expose it.
       SettingsScope.of(
         tester.element(find.byType(Scaffold).first),
-      ).update((s) => s.copyWith(palette: AppPalette.volt));
+      ).update((s) => s.copyWith(palette: AppPalette.flow));
       await tester.pumpAndSettle();
 
       final after = tester
@@ -237,7 +237,7 @@ void main() {
       soundEnabled: false,
       soundTheme: SoundTheme.pulse,
       haptics: false,
-      palette: AppPalette.mocha,
+      palette: AppPalette.flow,
     );
     final back = AppSettings.fromJson(custom.toJson());
     expect(back.toJson(), custom.toJson());

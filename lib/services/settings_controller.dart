@@ -25,7 +25,7 @@ class AppSettings {
     this.soundEnabled = true,
     this.soundTheme = SoundTheme.classic,
     this.haptics = true,
-    this.palette = AppPalette.cloud,
+    this.palette = AppPalette.sprint,
   });
 
   final AppLanguage language;

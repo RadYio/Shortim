@@ -1,5 +1,9 @@
 import 'series.dart';
 
+/// What the user picked in "Mes séries": load it into the editor, and
+/// optionally start it right away.
+typedef LibraryChoice = ({SavedSeries saved, bool launch});
+
 /// A series the user named and kept in "Mes séries".
 class SavedSeries {
   const SavedSeries({

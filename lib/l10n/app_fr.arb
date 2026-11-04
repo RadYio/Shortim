@@ -8,6 +8,7 @@
   "moveInterval": "Déplacer",
   "mySeries": "Mes séries",
   "settings": "Réglages",
+  "chronoTab": "Chrono",
   "maxIntervals": "{max} intervalles maximum",
   "@maxIntervals": {"placeholders": {"max": {"type": "int"}}},
   "totalDuration": "Durée totale : {duration}",

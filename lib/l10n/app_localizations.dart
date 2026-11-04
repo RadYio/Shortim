@@ -134,6 +134,12 @@ abstract class AppLocalizations {
   /// **'Réglages'**
   String get settings;
 
+  /// No description provided for @chronoTab.
+  ///
+  /// In fr, this message translates to:
+  /// **'Chrono'**
+  String get chronoTab;
+
   /// No description provided for @maxIntervals.
   ///
   /// In fr, this message translates to:

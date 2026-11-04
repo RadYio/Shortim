@@ -29,6 +29,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings => 'Réglages';
 
   @override
+  String get chronoTab => 'Chrono';
+
+  @override
   String maxIntervals(int max) {
     return '$max intervalles maximum';
   }

@@ -10,20 +10,31 @@ import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../services/timer_engine.dart';
 import '../theme.dart';
+import '../widgets/app_shell.dart';
 import '../widgets/duration_picker.dart';
 import '../widgets/round_icon_button.dart';
 import '../widgets/series_name_dialog.dart';
 import '../widgets/transitions.dart';
-import 'library_screen.dart';
 import 'run_screen.dart';
-import 'settings_screen.dart';
 
-/// Screen 1: build the series (intervals + repetition) and start it.
+/// Screen 1: build the series (intervals + repetition) and start it. Lives
+/// inside [AppShell]: navigation (réglages, mes séries) is its persistent
+/// bottom menu, not anything drawn here.
 class SetupScreen extends StatefulWidget {
-  const SetupScreen({super.key, required this.sounds, required this.storage});
+  const SetupScreen({
+    super.key,
+    required this.sounds,
+    required this.storage,
+    required this.library,
+    required this.libraryReady,
+    required this.applyController,
+  });
 
   final SoundService sounds;
   final StorageService storage;
+  final SeriesLibrary library;
+  final Future<void> libraryReady;
+  final SetupApplyController applyController;
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -46,8 +57,8 @@ class _SetupScreenState extends State<SetupScreen> {
   /// Intervals whose card should play its entrance animation.
   final Set<String> _appearing = {};
 
-  late final _library = SeriesLibrary(widget.storage);
-  late final Future<void> _libraryReady = _library.load();
+  late final _library = widget.library;
+  late final Future<void> _libraryReady = widget.libraryReady;
 
   /// Name of the series last saved or loaded: pre-fills "Enregistrer".
   String? _savedName;
@@ -56,6 +67,7 @@ class _SetupScreenState extends State<SetupScreen> {
   void initState() {
     super.initState();
     _libraryReady.ignore(); // Starts loading; awaited where needed.
+    widget.applyController.bind(_apply);
     _restore();
   }
 
@@ -140,13 +152,10 @@ class _SetupScreenState extends State<SetupScreen> {
 
   void _addInterval() {
     if (_active.length >= Series.maxIntervals) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(context.l10n.maxIntervals(Series.maxIntervals)),
-          ),
-        );
+      showAppSnackBar(
+        context,
+        context.l10n.maxIntervals(Series.maxIntervals),
+      );
       return;
     }
     // The new interval copies the current one: handy for repeated blocks.
@@ -217,42 +226,18 @@ class _SetupScreenState extends State<SetupScreen> {
     final saved = await _library.save(name, series);
     if (!mounted) return;
     setState(() => _savedName = saved.name);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            replaced
-                ? context.l10n.updatedSnack(saved.name)
-                : context.l10n.savedSnack(saved.name),
-          ),
-        ),
-      );
-  }
-
-  Future<void> _openLibrary() async {
-    await _libraryReady;
-    if (!mounted) return;
-    final choice = await Navigator.of(context).push(
-      fadeSlideRoute<LibraryChoice>((_) => LibraryScreen(library: _library)),
+    showAppSnackBar(
+      context,
+      replaced
+          ? context.l10n.updatedSnack(saved.name)
+          : context.l10n.savedSnack(saved.name),
     );
-    await _apply(choice);
   }
 
-  Future<void> _openSettings() async {
-    await _libraryReady;
+  /// A series picked in "Mes séries" (from the shell's bottom menu, or from
+  /// Settings' "Gérer mes séries").
+  Future<void> _apply(LibraryChoice choice) async {
     if (!mounted) return;
-    final choice = await Navigator.of(context).push(
-      fadeSlideRoute<LibraryChoice>(
-        (_) => SettingsScreen(sounds: widget.sounds, library: _library),
-      ),
-    );
-    await _apply(choice);
-  }
-
-  /// A series picked in "Mes séries" (directly or from the settings).
-  Future<void> _apply(LibraryChoice? choice) async {
-    if (choice == null || !mounted) return;
     _load(choice.saved);
     if (choice.launch) await _start();
   }
@@ -314,30 +299,7 @@ class _SetupScreenState extends State<SetupScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 16),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  const _Wordmark(),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      tooltip: context.l10n.settings,
-                      icon: const Icon(Icons.settings_outlined),
-                      color: AppColors.brand300,
-                      onPressed: _openSettings,
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      tooltip: context.l10n.mySeries,
-                      icon: const Icon(Icons.bookmarks_outlined),
-                      color: AppColors.brand300,
-                      onPressed: _openLibrary,
-                    ),
-                  ),
-                ],
-              ),
+              const _Wordmark(),
               const SizedBox(height: 24),
               _Switch(
                 child: Text(
@@ -421,7 +383,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: kBottomBarReserve),
             ],
           ),
         ),

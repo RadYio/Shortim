@@ -88,7 +88,7 @@ void main() {
       expect(find.text('LANGUAGE'), findsOneWidget);
       expect((await storedSettings())['language'], 'en');
 
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(find.byTooltip('Chrono'));
       await tester.pumpAndSettle();
       expect(find.text('Start'), findsOneWidget);
     });

@@ -7,32 +7,26 @@ import '../services/series_library.dart';
 import '../services/settings_controller.dart';
 import '../services/sound_service.dart';
 import '../theme.dart';
-import '../widgets/transitions.dart';
-import 'library_screen.dart';
 
-/// "Réglages". Unlike the rest of the app it spells everything out. Pops
-/// with a [LibraryChoice] when a series was picked from "Gérer mes séries".
+/// "Réglages". Unlike the rest of the app it spells everything out. Lives
+/// inside the shell's persistent bottom menu: [onOpenLibrary] switches to
+/// the "Mes séries" tab. No back button — the bottom menu is the only nav.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     super.key,
     required this.sounds,
     required this.library,
+    required this.onOpenLibrary,
   });
 
   final SoundService sounds;
   final SeriesLibrary library;
+  final VoidCallback onOpenLibrary;
 
   Future<void> _preview(SoundTheme theme) async {
     await sounds.init();
     await sounds.setTheme(theme);
     await sounds.intervalChange();
-  }
-
-  Future<void> _openLibrary(BuildContext context) async {
-    final choice = await Navigator.of(context).push(
-      fadeSlideRoute<LibraryChoice>((_) => LibraryScreen(library: library)),
-    );
-    if (choice != null && context.mounted) Navigator.pop(context, choice);
   }
 
   @override
@@ -46,20 +40,9 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, kBottomBarReserve),
           children: [
-            Row(
-              children: [
-                IconButton(
-                  tooltip: l10n.back,
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                  color: AppColors.brand300,
-                  onPressed: () => Navigator.pop(context),
-                ),
-                const SizedBox(width: 4),
-                Text(l10n.settings, style: AppText.wordmark(fontSize: 32)),
-              ],
-            ),
+            Text(l10n.settings, style: AppText.wordmark(fontSize: 32)),
             _Section(
               label: l10n.languageSection,
               children: [
@@ -152,7 +135,7 @@ class SettingsScreen extends StatelessWidget {
               label: l10n.seriesSection,
               children: [
                 _Card(
-                  onTap: () => _openLibrary(context),
+                  onTap: onOpenLibrary,
                   child: Row(
                     children: [
                       Expanded(

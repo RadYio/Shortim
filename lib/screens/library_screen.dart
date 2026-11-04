@@ -10,16 +10,27 @@ import '../widgets/round_icon_button.dart';
 import '../widgets/series_name_dialog.dart';
 import '../widgets/shortim_mark.dart';
 
-/// What the user picked in "Mes séries": load it into the editor, and
-/// optionally start it right away.
-typedef LibraryChoice = ({SavedSeries saved, bool launch});
-
-/// "Mes séries": saved series with launch / rename / delete. Pops with a
-/// [LibraryChoice], or null when the user just goes back.
+/// "Mes séries": saved series with launch / rename / delete. Lives inside
+/// the shell's persistent bottom menu: [onChoice] reports a pick (load,
+/// optionally launch) back to it. No back button — the bottom menu is the
+/// only nav.
 class LibraryScreen extends StatefulWidget {
-  const LibraryScreen({super.key, required this.library});
+  const LibraryScreen({
+    super.key,
+    required this.library,
+    required this.libraryReady,
+    required this.isActive,
+    required this.onChoice,
+  });
 
   final SeriesLibrary library;
+  final Future<void> libraryReady;
+
+  /// Whether this is the shell's current section. Series can be saved from
+  /// the Chrono tab while this one sits inactive in the background: use the
+  /// inactive→active edge to pick up any such change.
+  final bool isActive;
+  final ValueChanged<LibraryChoice> onChoice;
 
   @override
   State<LibraryScreen> createState() => _LibraryScreenState();
@@ -30,18 +41,31 @@ class _LibraryScreenState extends State<LibraryScreen>
   static const _stagger = 50; // ms between cards on first display
   static const _maxStaggered = 8;
 
-  final _listKey = GlobalKey<AnimatedListState>();
+  var _listKey = GlobalKey<AnimatedListState>();
   late List<SavedSeries> _items = widget.library.items;
 
   /// Cards fade and slide in one after the other when the screen opens.
-  late final _intro = AnimationController(
-    vsync: this,
-    duration: Duration(
-      milliseconds:
-          AppMotion.slow.inMilliseconds +
-          _stagger * math.min(_items.length, _maxStaggered),
-    ),
-  )..forward();
+  /// Created eagerly (not `late`) so disposing before a first build never
+  /// triggers a ticker lookup on a deactivated widget.
+  late final AnimationController _intro;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(
+      vsync: this,
+      duration: Duration(
+        milliseconds:
+            AppMotion.slow.inMilliseconds +
+            _stagger * math.min(_items.length, _maxStaggered),
+      ),
+    )..forward();
+    // The shared library may still be loading when this tab first builds
+    // (IndexedStack mounts every section up front): refresh once it's in.
+    widget.libraryReady.then((_) {
+      if (mounted) setState(() => _items = widget.library.items);
+    });
+  }
 
   @override
   void dispose() {
@@ -49,8 +73,22 @@ class _LibraryScreenState extends State<LibraryScreen>
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(LibraryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Just switched into this tab: a series may have been saved elsewhere
+    // (e.g. from Chrono) while it sat inactive in the background. A fresh
+    // key rebuilds the AnimatedList from scratch, no incremental diffing.
+    if (widget.isActive && !oldWidget.isActive) {
+      setState(() {
+        _items = widget.library.items;
+        _listKey = GlobalKey<AnimatedListState>();
+      });
+    }
+  }
+
   void _choose(SavedSeries saved, {required bool launch}) =>
-      Navigator.pop<LibraryChoice>(context, (saved: saved, launch: launch));
+      widget.onChoice((saved: saved, launch: launch));
 
   Future<void> _rename(SavedSeries saved) async {
     final name = await showSeriesNameDialog(
@@ -77,17 +115,14 @@ class _LibraryScreenState extends State<LibraryScreen>
           _transition(animation, _card(saved, enabled: false)),
       duration: AppMotion.base,
     );
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.deletedSnack(saved.name)),
-          action: SnackBarAction(
-            label: context.l10n.undo,
-            onPressed: () => _undoDelete(saved, index),
-          ),
-        ),
-      );
+    showAppSnackBar(
+      context,
+      context.l10n.deletedSnack(saved.name),
+      action: SnackBarAction(
+        label: context.l10n.undo,
+        onPressed: () => _undoDelete(saved, index),
+      ),
+    );
   }
 
   Future<void> _undoDelete(SavedSeries saved, int index) async {
@@ -110,26 +145,13 @@ class _LibraryScreenState extends State<LibraryScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  IconButton(
-                    tooltip: context.l10n.back,
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    color: AppColors.brand300,
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      context.l10n.mySeries,
-                      style: AppText.wordmark(fontSize: 32),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 24),
+              Text(
+                context.l10n.mySeries,
+                style: AppText.wordmark(fontSize: 32),
               ),
               Padding(
-                padding: const EdgeInsets.only(left: 52, top: 4, bottom: 16),
+                padding: const EdgeInsets.only(top: 4, bottom: 16),
                 child: AnimatedOpacity(
                   opacity: count > 0 ? 1 : 0,
                   duration: AppMotion.base,
@@ -145,7 +167,9 @@ class _LibraryScreenState extends State<LibraryScreen>
                     AnimatedList(
                       key: _listKey,
                       initialItemCount: count,
-                      padding: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.only(
+                        bottom: kBottomBarReserve,
+                      ),
                       itemBuilder: (context, index, animation) {
                         final saved = _items[index];
                         return _transition(

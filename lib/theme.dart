@@ -43,6 +43,29 @@ abstract final class AppMotion {
 /// Digits that keep the same width, so the countdown does not wobble.
 const tabularFigures = [FontFeature.tabularFigures()];
 
+/// Space every screen must reserve at the bottom so its content never sits
+/// under the persistent floating menu bar drawn by `AppShell`.
+const kBottomBarReserve = 92.0;
+
+/// Shows [content] in a SnackBar lifted above the persistent floating menu
+/// bar, so it never visually collides with (or blocks taps on) it.
+void showAppSnackBar(
+  BuildContext context,
+  String content, {
+  SnackBarAction? action,
+}) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, kBottomBarReserve + 12),
+        content: Text(content),
+        action: action,
+      ),
+    );
+}
+
 abstract final class AppText {
   /// Playfair Display wordmark (brand screens only).
   static TextStyle wordmark({double fontSize = 30, Color? color}) =>
@@ -149,7 +172,13 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
         borderRadius: BorderRadius.all(Radius.circular(24)),
         side: BorderSide(color: AppColors.brand700),
       ),
-      titleTextStyle: AppText.wordmark(fontSize: 24),
+      // Same default font as the buttons/content inside it — the wordmark
+      // (Playfair) is reserved for full-screen headers, never modals.
+      titleTextStyle: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: AppColors.text,
+      ),
       contentTextStyle: const TextStyle(
         fontSize: 15,
         color: AppColors.brand300,

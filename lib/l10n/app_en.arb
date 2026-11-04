@@ -7,6 +7,7 @@
   "moveInterval": "Move",
   "mySeries": "My series",
   "settings": "Settings",
+  "chronoTab": "Chrono",
   "maxIntervals": "{max} intervals maximum",
   "totalDuration": "Total: {duration}",
   "totalDurationRounds": "Total: {total}  ({rounds} × {round})",

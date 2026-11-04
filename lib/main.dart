@@ -6,12 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'l10n/l10n.dart';
-import 'screens/setup_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/settings_controller.dart';
 import 'services/sound_service.dart';
 import 'services/storage_service.dart';
 import 'theme.dart';
+import 'widgets/app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -90,7 +90,7 @@ class _ShortimAppState extends State<ShortimApp> {
                 resolveDeviceLocale(device),
             home: SplashScreen(
               next: (_) =>
-                  SetupScreen(sounds: widget.sounds, storage: widget.storage),
+                  AppShell(sounds: widget.sounds, storage: widget.storage),
             ),
           );
         },

@@ -11,7 +11,7 @@ import 'fakes.dart';
 
 void main() {
   setUpAll(configureFonts);
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'has_onboarded': true}));
 
   Future<void> pumpApp(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1170, 2532);
@@ -29,6 +29,7 @@ void main() {
   /// Starts the app with one saved series: "Jambes", 2 × 00:20, repeated 3×.
   Future<void> pumpWithLibrary(WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
+      'has_onboarded': true,
       'saved_series': jsonEncode([
         {
           'id': 'j',

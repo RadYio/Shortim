@@ -101,4 +101,12 @@ class StorageService {
 
   Future<void> saveSettings(AppSettings settings) async =>
       (await _prefs).setString(_settingsKey, jsonEncode(settings.toJson()));
+
+  static const _onboardedKey = 'has_onboarded';
+
+  Future<bool> hasOnboarded() async =>
+      (await _prefs).getBool(_onboardedKey) ?? false;
+
+  Future<void> setOnboarded() async =>
+      (await _prefs).setBool(_onboardedKey, true);
 }

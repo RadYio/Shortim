@@ -463,9 +463,16 @@ class _PaletteBubble extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           ColoredBox(color: palette.background),
+          // Lower-right half (the diagonal cut) carries both accents
+          // stacked, not one flat tint — reads as a real palette.
           ClipPath(
             clipper: _DiagonalClipper(),
-            child: ColoredBox(color: palette.accent),
+            child: Column(
+              children: [
+                Expanded(child: ColoredBox(color: palette.accent)),
+                Expanded(child: ColoredBox(color: palette.accent2)),
+              ],
+            ),
           ),
         ],
       ),

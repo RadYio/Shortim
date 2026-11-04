@@ -12,7 +12,7 @@ import 'fakes.dart';
 
 void main() {
   setUpAll(configureFonts);
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'has_onboarded': true}));
 
   late FakeSoundService sounds;
 
@@ -97,6 +97,7 @@ void main() {
       tester,
     ) async {
       SharedPreferences.setMockInitialValues({
+        'has_onboarded': true,
         'settings': jsonEncode({'language': 'en'}),
       });
       await pumpApp(tester); // French device.
@@ -112,7 +113,7 @@ void main() {
     await tester.tap(swatch('Volt'));
     await tester.pumpAndSettle();
     final theme = Theme.of(tester.element(find.byType(Scaffold).last));
-    expect(theme.colorScheme.primary, AppPalette.volt.accent);
+    expect(theme.colorScheme.primary, AppPalette.volt.accent2);
     expect((await storedSettings())['palette'], 'volt');
   });
 
@@ -150,6 +151,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({
+      'has_onboarded': true,
       'saved_series': jsonEncode([
         {
           'id': 'j',
@@ -172,6 +174,62 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Durée totale : 01:00'), findsOneWidget);
   });
+
+  testWidgets(
+    'a palette change applies live to "Mes séries" without navigating away '
+    '(regression guard: library cards must never show a stale palette)',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'has_onboarded': true,
+        'saved_series': jsonEncode([
+          {
+            'id': 'j',
+            'name': 'Jambes',
+            'intervals': [
+              {'id': 'a', 'minutes': 1, 'seconds': 0},
+            ],
+            'loopMode': 'once',
+            'loopCount': 1,
+          },
+        ]),
+      });
+      await pumpApp(tester);
+
+      await tester.tap(find.byTooltip('Mes séries'));
+      await tester.pumpAndSettle();
+      final before = tester
+          .widgetList<Material>(
+            find.ancestor(
+              of: find.text('Jambes'),
+              matching: find.byType(Material),
+            ),
+          )
+          .first
+          .color;
+
+      // Change the palette from outside, the way Settings does internally —
+      // without navigating away from "Mes séries": if a card's colour was
+      // ever cached instead of read fresh from AppColors on every build,
+      // this is the scenario that would expose it.
+      SettingsScope.of(
+        tester.element(find.byType(Scaffold).first),
+      ).update((s) => s.copyWith(palette: AppPalette.volt));
+      await tester.pumpAndSettle();
+
+      final after = tester
+          .widgetList<Material>(
+            find.ancestor(
+              of: find.text('Jambes'),
+              matching: find.byType(Material),
+            ),
+          )
+          .first
+          .color;
+
+      expect(before, isNot(after));
+      expect(after, AppColors.surface);
+    },
+  );
 
   test('settings JSON round-trips, unknown values fall back', () {
     const custom = AppSettings(

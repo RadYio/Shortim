@@ -32,6 +32,56 @@ class AppLocalizationsFr extends AppLocalizations {
   String get chronoTab => 'Chrono';
 
   @override
+  String get onboardWelcomeTitle => 'Bienvenue dans Shortim';
+
+  @override
+  String get onboardWelcomeSubtitle =>
+      'Crée une série de minuteurs sur-mesure et lance-la en quelques secondes.';
+
+  @override
+  String get onboardStart => 'Commencer';
+
+  @override
+  String get onboardCategoryTitle => 'Quel type de séance ?';
+
+  @override
+  String get onboardCategorySubtitle =>
+      'On te prépare une première série adaptée.';
+
+  @override
+  String get onboardHiit => 'HIIT';
+
+  @override
+  String get onboardHiitHint => '8 tours · 20 s effort / 10 s repos';
+
+  @override
+  String get onboardStretch => 'Étirements';
+
+  @override
+  String get onboardStretchHint => '6 positions · 30 s chacune';
+
+  @override
+  String get onboardBreathing => 'Respiration';
+
+  @override
+  String get onboardBreathingHint => '5 cycles · inspire / retiens / expire';
+
+  @override
+  String get onboardCustom => 'Perso';
+
+  @override
+  String get onboardCustomHint => 'Un minuteur simple, à régler toi-même';
+
+  @override
+  String get onboardResultTitle => 'Ta première série est prête';
+
+  @override
+  String get onboardStartNow => 'Démarrer maintenant';
+
+  @override
+  String get onboardEditFirst => 'Modifier d\'abord';
+
+  @override
   String maxIntervals(int max) {
     return '$max intervalles maximum';
   }

@@ -9,7 +9,7 @@ import 'fakes.dart';
 
 void main() {
   setUpAll(configureFonts);
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'has_onboarded': true}));
 
   Future<void> pumpApp(WidgetTester tester, {bool settle = true}) async {
     tester.view.physicalSize = const Size(1170, 2532);

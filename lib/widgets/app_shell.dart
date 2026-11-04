@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../models/saved_series.dart';
 import '../services/series_library.dart';
+import '../services/settings_controller.dart';
 import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import 'floating_menu_bar.dart';
@@ -59,6 +60,10 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Explicit dependency on settings: belt-and-braces so a palette change
+    // always repaints every screen below (Chrono, Mes séries) even if a
+    // future refactor changes how this shell is reached from the Navigator.
+    SettingsScope.of(context);
     return Scaffold(
       body: Stack(
         children: [

@@ -14,7 +14,7 @@ Series _series(int seconds, {int repeat = 1}) => Series(
 );
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'has_onboarded': true}));
 
   test('saves, persists and reloads', () async {
     final library = SeriesLibrary(StorageService());

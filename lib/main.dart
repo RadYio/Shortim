@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'l10n/l10n.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/settings_controller.dart';
 import 'services/sound_service.dart';
@@ -90,12 +91,49 @@ class _ShortimAppState extends State<ShortimApp> {
                 resolveDeviceLocale(device),
             home: SplashScreen(
               next: (_) =>
-                  AppShell(sounds: widget.sounds, storage: widget.storage),
+                  _AfterSplash(sounds: widget.sounds, storage: widget.storage),
             ),
           );
         },
       ),
     );
+  }
+}
+
+/// Decides between the first-run onboarding and the main shell, based on
+/// the persisted flag — never re-shown once onboarding has completed.
+class _AfterSplash extends StatefulWidget {
+  const _AfterSplash({required this.sounds, required this.storage});
+
+  final SoundService sounds;
+  final StorageService storage;
+
+  @override
+  State<_AfterSplash> createState() => _AfterSplashState();
+}
+
+class _AfterSplashState extends State<_AfterSplash> {
+  bool? _onboarded;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.storage.hasOnboarded().then((v) {
+      if (mounted) setState(() => _onboarded = v);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_onboarded == null) return const SizedBox.shrink();
+    if (_onboarded == false) {
+      return OnboardingScreen(
+        sounds: widget.sounds,
+        storage: widget.storage,
+        onDone: () => setState(() => _onboarded = true),
+      );
+    }
+    return AppShell(sounds: widget.sounds, storage: widget.storage);
   }
 }
 

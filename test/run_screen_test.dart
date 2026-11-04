@@ -25,7 +25,7 @@ class FakeClock {
 
 void main() {
   setUpAll(configureFonts);
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() => SharedPreferences.setMockInitialValues({'has_onboarded': true}));
 
   late FakeClock clock;
   late FakeSoundService sounds;

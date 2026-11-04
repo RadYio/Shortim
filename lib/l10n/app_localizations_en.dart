@@ -32,6 +32,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chronoTab => 'Chrono';
 
   @override
+  String get onboardWelcomeTitle => 'Welcome to Shortim';
+
+  @override
+  String get onboardWelcomeSubtitle =>
+      'Build a custom interval series and start it in seconds.';
+
+  @override
+  String get onboardStart => 'Get started';
+
+  @override
+  String get onboardCategoryTitle => 'What kind of session?';
+
+  @override
+  String get onboardCategorySubtitle =>
+      'We\'ll put together a first series for you.';
+
+  @override
+  String get onboardHiit => 'HIIT';
+
+  @override
+  String get onboardHiitHint => '8 rounds · 20 s work / 10 s rest';
+
+  @override
+  String get onboardStretch => 'Stretching';
+
+  @override
+  String get onboardStretchHint => '6 holds · 30 s each';
+
+  @override
+  String get onboardBreathing => 'Breathing';
+
+  @override
+  String get onboardBreathingHint => '5 cycles · inhale / hold / exhale';
+
+  @override
+  String get onboardCustom => 'Custom';
+
+  @override
+  String get onboardCustomHint => 'A simple timer you set yourself';
+
+  @override
+  String get onboardResultTitle => 'Your first series is ready';
+
+  @override
+  String get onboardStartNow => 'Start now';
+
+  @override
+  String get onboardEditFirst => 'Edit first';
+
+  @override
   String maxIntervals(int max) {
     return '$max intervals maximum';
   }

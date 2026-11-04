@@ -140,6 +140,102 @@ abstract class AppLocalizations {
   /// **'Chrono'**
   String get chronoTab;
 
+  /// No description provided for @onboardWelcomeTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bienvenue dans Shortim'**
+  String get onboardWelcomeTitle;
+
+  /// No description provided for @onboardWelcomeSubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Crée une série de minuteurs sur-mesure et lance-la en quelques secondes.'**
+  String get onboardWelcomeSubtitle;
+
+  /// No description provided for @onboardStart.
+  ///
+  /// In fr, this message translates to:
+  /// **'Commencer'**
+  String get onboardStart;
+
+  /// No description provided for @onboardCategoryTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Quel type de séance ?'**
+  String get onboardCategoryTitle;
+
+  /// No description provided for @onboardCategorySubtitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'On te prépare une première série adaptée.'**
+  String get onboardCategorySubtitle;
+
+  /// No description provided for @onboardHiit.
+  ///
+  /// In fr, this message translates to:
+  /// **'HIIT'**
+  String get onboardHiit;
+
+  /// No description provided for @onboardHiitHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'8 tours · 20 s effort / 10 s repos'**
+  String get onboardHiitHint;
+
+  /// No description provided for @onboardStretch.
+  ///
+  /// In fr, this message translates to:
+  /// **'Étirements'**
+  String get onboardStretch;
+
+  /// No description provided for @onboardStretchHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'6 positions · 30 s chacune'**
+  String get onboardStretchHint;
+
+  /// No description provided for @onboardBreathing.
+  ///
+  /// In fr, this message translates to:
+  /// **'Respiration'**
+  String get onboardBreathing;
+
+  /// No description provided for @onboardBreathingHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'5 cycles · inspire / retiens / expire'**
+  String get onboardBreathingHint;
+
+  /// No description provided for @onboardCustom.
+  ///
+  /// In fr, this message translates to:
+  /// **'Perso'**
+  String get onboardCustom;
+
+  /// No description provided for @onboardCustomHint.
+  ///
+  /// In fr, this message translates to:
+  /// **'Un minuteur simple, à régler toi-même'**
+  String get onboardCustomHint;
+
+  /// No description provided for @onboardResultTitle.
+  ///
+  /// In fr, this message translates to:
+  /// **'Ta première série est prête'**
+  String get onboardResultTitle;
+
+  /// No description provided for @onboardStartNow.
+  ///
+  /// In fr, this message translates to:
+  /// **'Démarrer maintenant'**
+  String get onboardStartNow;
+
+  /// No description provided for @onboardEditFirst.
+  ///
+  /// In fr, this message translates to:
+  /// **'Modifier d\'abord'**
+  String get onboardEditFirst;
+
   /// No description provided for @maxIntervals.
   ///
   /// In fr, this message translates to:

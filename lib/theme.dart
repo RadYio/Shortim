@@ -15,19 +15,21 @@ abstract final class AppColors {
   static Color surface = const Color(0xFF0E0E10); // cards, a notch above ink
   static Color surfaceRaised = const Color(0xFF17171A); // dialogs, proxy
   static Color text = AppPalette.cloud.accent;
+  static Color accent2 = AppPalette.cloud.accent2;
   static Color brand300 = const Color(0xFFD4D4D8);
   static Color brand400 = const Color(0xFFA1A1AA);
   static Color brand500 = const Color(0xFF71717A);
   static Color brand600 = const Color(0xFF52525B);
   static Color brand700 = const Color(0xFF3F3F46);
 
-  /// Recomputes every token above from [palette]'s background/accent pair.
+  /// Recomputes every token above from [palette]'s colours.
   static void apply(AppPalette palette) {
     Color mix(double t) => Color.lerp(palette.background, palette.accent, t)!;
     ink = palette.background;
     surface = mix(0.06);
     surfaceRaised = mix(0.10);
     text = palette.accent;
+    accent2 = palette.accent2;
     brand300 = mix(0.72);
     brand400 = mix(0.52);
     brand500 = mix(0.36);
@@ -36,28 +38,34 @@ abstract final class AppColors {
   }
 }
 
-/// A background/typography colour pair selectable in Settings — replaces
-/// the old single-hue "accent": font and highlights share [accent], the
-/// rest of the UI (surfaces, muted labels, borders) is derived from the mix
-/// of the two. Named after current colour-trend vocabulary.
+/// A background + two-accent trio selectable in Settings — replaces the old
+/// single-hue "accent". [accent] drives typography/numbers/links, [accent2]
+/// drives actions (the primary button, selections, switches): two distinct
+/// hues reading as a real palette rather than one colour tinting everything.
+/// Named after current colour-trend vocabulary.
 enum AppPalette {
-  /// Sporty, energetic: flashy lime on a near-black forest green.
-  volt('Volt', Color(0xFF0A130D), Color(0xFFC6FF3D)),
+  /// Sporty, energetic: flashy lime text with a hot-coral call to action,
+  /// on a near-black forest green.
+  volt('Volt', Color(0xFF0A130D), Color(0xFFC6FF3D), Color(0xFFFF6B4A)),
 
-  /// Calm, hazy — 2026's "frosted tints" mood.
-  chill('Chill', Color(0xFF0A0D16), Color(0xFF9FB4FF)),
+  /// Calm, hazy — 2026's "frosted tints" mood: periwinkle blue text with a
+  /// soft violet action colour.
+  chill('Chill', Color(0xFF0A0D16), Color(0xFF9FB4FF), Color(0xFFC9B6F3)),
 
-  /// Warm and cozy — Pantone 2025 Colour of the Year, Mocha Mousse.
-  mocha('Mocha', Color(0xFF150F0C), Color(0xFFC9966B)),
+  /// Warm and cozy — Pantone 2025 Colour of the Year, Mocha Mousse, paired
+  /// with a muted amber-gold action colour.
+  mocha('Mocha', Color(0xFF150F0C), Color(0xFFC9966B), Color(0xFFE8B65A)),
 
-  /// Minimal and serene — Pantone 2026 Colour of the Year, Cloud Dancer.
-  cloud('Cloud', Color(0xFF08080A), Color(0xFFF0EDE5));
+  /// Minimal and serene — Pantone 2026 Colour of the Year, Cloud Dancer,
+  /// paired with a soft dusty-rose action colour.
+  cloud('Cloud', Color(0xFF08080A), Color(0xFFF0EDE5), Color(0xFFE0A8A0));
 
-  const AppPalette(this.label, this.background, this.accent);
+  const AppPalette(this.label, this.background, this.accent, this.accent2);
 
   final String label;
   final Color background;
   final Color accent;
+  final Color accent2;
 }
 
 abstract final class AppMotion {
@@ -137,13 +145,14 @@ abstract final class AppText {
 ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
   AppColors.apply(palette);
   final accentColor = palette.accent;
+  final actionColor = palette.accent2;
   const pill = StadiumBorder();
   const buttonText = TextStyle(fontSize: 17, fontWeight: FontWeight.w600);
   final base = ThemeData(
     brightness: Brightness.dark,
     useMaterial3: true,
     colorScheme: ColorScheme.dark(
-      primary: accentColor,
+      primary: actionColor,
       onPrimary: AppColors.ink,
       secondary: accentColor,
       onSecondary: AppColors.ink,
@@ -162,7 +171,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: accentColor,
+        backgroundColor: actionColor,
         foregroundColor: AppColors.ink,
         disabledBackgroundColor: AppColors.brand700,
         disabledForegroundColor: AppColors.brand500,
@@ -182,7 +191,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: accentColor,
+        foregroundColor: actionColor,
         shape: pill,
         textStyle: buttonText.copyWith(fontSize: 15),
       ),
@@ -191,7 +200,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
       style: SegmentedButton.styleFrom(
         foregroundColor: AppColors.brand300,
         selectedForegroundColor: AppColors.ink,
-        selectedBackgroundColor: accentColor,
+        selectedBackgroundColor: actionColor,
         side: BorderSide(color: AppColors.brand700),
         shape: pill,
         minimumSize: const Size.fromHeight(44),
@@ -216,7 +225,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.surfaceRaised,
-      actionTextColor: accentColor,
+      actionTextColor: actionColor,
       contentTextStyle: TextStyle(color: AppColors.text),
       behavior: SnackBarBehavior.floating,
       shape: StadiumBorder(side: BorderSide(color: AppColors.brand700)),
@@ -250,13 +259,13 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: const BorderRadius.all(Radius.circular(16)),
-        borderSide: BorderSide(color: accentColor),
+        borderSide: BorderSide(color: actionColor),
       ),
     ),
     textSelectionTheme: TextSelectionThemeData(
-      cursorColor: accentColor,
-      selectionColor: accentColor.withValues(alpha: 0.3),
-      selectionHandleColor: accentColor,
+      cursorColor: actionColor,
+      selectionColor: actionColor.withValues(alpha: 0.3),
+      selectionHandleColor: actionColor,
     ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
@@ -266,12 +275,12 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
       ),
       trackColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? accentColor
+            ? actionColor
             : AppColors.surfaceRaised,
       ),
       trackOutlineColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? accentColor
+            ? actionColor
             : AppColors.brand600,
       ),
     ),

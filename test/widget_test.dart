@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shortim/main.dart';
 import 'package:shortim/screens/splash_screen.dart';
 import 'package:shortim/services/storage_service.dart';
+import 'package:shortim/widgets/round_icon_button.dart';
 
 import 'fakes.dart';
 
@@ -96,6 +97,37 @@ void main() {
     await tester.tap(find.byTooltip('Supprimer').first);
     await tester.pump();
     expect(find.text('Durée totale : 14:30'), findsOneWidget);
+  });
+
+  testWidgets('repeat count cannot go below 2', (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.text('Répéter x fois'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 fois'), findsOneWidget);
+
+    // Already at the floor: the decrement button refuses to go to 1.
+    await tester.tap(find.byTooltip('Moins de répétitions'));
+    await tester.pump();
+    expect(find.text('2 fois'), findsOneWidget);
+    expect(
+      tester.widget<RoundIconButton>(
+        find.ancestor(
+          of: find.byTooltip('Moins de répétitions'),
+          matching: find.byType(RoundIconButton),
+        ),
+      ),
+      isA<RoundIconButton>().having((b) => b.onPressed, 'onPressed', isNull),
+    );
+
+    // Climbing up and back down still floors at 2, never 1.
+    await tester.tap(find.byTooltip('Plus de répétitions'));
+    await tester.pump();
+    expect(find.text('3 fois'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Moins de répétitions'));
+    await tester.pump();
+    expect(find.text('2 fois'), findsOneWidget);
   });
 
   testWidgets('splash draws the mark, then opens the setup screen', (

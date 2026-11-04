@@ -55,28 +55,26 @@ class SettingsScreen extends StatelessWidget {
             _Section(
               label: l10n.languageSection,
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: SegmentedButton<AppLanguage>(
-                    showSelectedIcon: false,
-                    segments: [
-                      ButtonSegment(
-                        value: AppLanguage.system,
-                        label: Text(l10n.languageAuto),
-                      ),
-                      ButtonSegment(
-                        value: AppLanguage.fr,
-                        label: Text(l10n.languageFrench),
-                      ),
-                      ButtonSegment(
-                        value: AppLanguage.en,
-                        label: Text(l10n.languageEnglish),
-                      ),
-                    ],
-                    selected: {settings.language},
-                    onSelectionChanged: (s) =>
-                        update((x) => x.copyWith(language: s.single)),
-                  ),
+                DropdownButtonFormField<AppLanguage>(
+                  initialValue: settings.language,
+                  dropdownColor: AppColors.surfaceRaised,
+                  items: [
+                    DropdownMenuItem(
+                      value: AppLanguage.system,
+                      child: Text(l10n.languageAuto),
+                    ),
+                    DropdownMenuItem(
+                      value: AppLanguage.fr,
+                      child: Text(l10n.languageFrench),
+                    ),
+                    DropdownMenuItem(
+                      value: AppLanguage.en,
+                      child: Text(l10n.languageEnglish),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) update((x) => x.copyWith(language: v));
+                  },
                 ),
                 _Hint(l10n.languageAutoHint(_deviceLanguageName(l10n))),
               ],
@@ -95,25 +93,23 @@ class SettingsScreen extends StatelessWidget {
                   opacity: settings.soundEnabled ? 1 : 0.4,
                   duration: AppMotion.base,
                   curve: AppMotion.brand,
-                  child: IgnorePointer(
-                    ignoring: !settings.soundEnabled,
-                    child: Column(
-                      children: [
-                        for (final theme in SoundTheme.values)
-                          _ThemeTile(
-                            name: _themeName(l10n, theme),
-                            selected: theme == settings.soundTheme,
-                            previewTooltip: l10n.previewSoundFor(
-                              _themeName(l10n, theme),
-                            ),
-                            onSelect: () {
-                              update((x) => x.copyWith(soundTheme: theme));
-                              unawaited(_preview(theme));
-                            },
-                            onPreview: () => unawaited(_preview(theme)),
-                          ),
-                      ],
-                    ),
+                  child: DropdownButtonFormField<SoundTheme>(
+                    initialValue: settings.soundTheme,
+                    dropdownColor: AppColors.surfaceRaised,
+                    items: [
+                      for (final theme in SoundTheme.values)
+                        DropdownMenuItem(
+                          value: theme,
+                          child: Text(_themeName(l10n, theme)),
+                        ),
+                    ],
+                    onChanged: !settings.soundEnabled
+                        ? null
+                        : (theme) {
+                            if (theme == null) return;
+                            update((x) => x.copyWith(soundTheme: theme));
+                            unawaited(_preview(theme));
+                          },
                   ),
                 ),
                 _Hint(l10n.duckingHint),
@@ -230,11 +226,10 @@ class _Hint extends StatelessWidget {
 
 /// Bordered card, like the interval and saved-series cards.
 class _Card extends StatelessWidget {
-  const _Card({required this.child, this.onTap, this.selected = false});
+  const _Card({required this.child, this.onTap});
 
   final Widget child;
   final VoidCallback? onTap;
-  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -246,11 +241,7 @@ class _Card extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected
-                ? Theme.of(context).colorScheme.primary
-                : AppColors.brand700,
-          ),
+          border: Border.all(color: AppColors.brand700),
         ),
         child: Material(
           type: MaterialType.transparency,
@@ -312,72 +303,6 @@ class _Toggle extends StatelessWidget {
           const SizedBox(width: 12),
           Switch(value: value, onChanged: onChanged),
         ],
-      ),
-    );
-  }
-}
-
-class _ThemeTile extends StatelessWidget {
-  const _ThemeTile({
-    required this.name,
-    required this.selected,
-    required this.previewTooltip,
-    required this.onSelect,
-    required this.onPreview,
-  });
-
-  final String name;
-  final bool selected;
-  final String previewTooltip;
-  final VoidCallback onSelect;
-  final VoidCallback onPreview;
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = Theme.of(context).colorScheme.primary;
-    return Semantics(
-      selected: selected,
-      inMutuallyExclusiveGroup: true,
-      child: _Card(
-        selected: selected,
-        onTap: onSelect,
-        child: Row(
-          children: [
-            // Radio dot that pops in with a slight bounce.
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected ? accent : AppColors.brand600,
-                ),
-              ),
-              alignment: Alignment.center,
-              child: AnimatedScale(
-                scale: selected ? 1 : 0,
-                duration: AppMotion.slow,
-                curve: AppMotion.emphasis,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: accent,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(child: Text(name, style: const TextStyle(fontSize: 16))),
-            IconButton(
-              tooltip: previewTooltip,
-              icon: const Icon(Icons.volume_up_outlined, size: 20),
-              color: AppColors.brand400,
-              onPressed: onPreview,
-            ),
-          ],
-        ),
       ),
     );
   }

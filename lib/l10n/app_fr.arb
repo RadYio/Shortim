@@ -113,5 +113,15 @@
   "paletteSection": "COULEURS",
   "seriesSection": "SÉRIES ENREGISTRÉES",
   "manageSeries": "Gérer mes séries",
-  "manageSeriesHint": "Lancer, renommer ou supprimer vos séries."
+  "manageSeriesHint": "Lancer, renommer ou supprimer vos séries.",
+
+  "mascotFresh1": "C'est parti !",
+  "mascotFresh2": "On attaque !",
+  "mascotFresh3": "Prêt(e) à tout donner !",
+  "mascotMid1": "Accroche-toi !",
+  "mascotMid2": "Tiens bon !",
+  "mascotMid3": "Courage, tu tiens le rythme !",
+  "mascotNearEnd1": "Allez, presque fini !",
+  "mascotNearEnd2": "Derniers efforts !",
+  "mascotNearEnd3": "Tiens encore un peu !"
 }

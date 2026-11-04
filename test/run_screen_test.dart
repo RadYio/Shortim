@@ -12,6 +12,7 @@ import 'package:shortim/screens/run_screen.dart';
 import 'package:shortim/services/settings_controller.dart';
 import 'package:shortim/services/storage_service.dart';
 import 'package:shortim/theme.dart';
+import 'package:shortim/widgets/mascot.dart';
 
 import 'fakes.dart';
 
@@ -123,6 +124,25 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.text('Terminé'), findsNothing);
     expect(find.text('00:04'), findsOneWidget);
+  });
+
+  testWidgets('mascot shows below the countdown with an encouraging phrase', (
+    tester,
+  ) async {
+    await pumpRun(tester);
+    expect(find.byType(Mascot), findsOneWidget);
+    // Fresh state (just started): the first phrase of that pool is picked.
+    expect(find.text("C'est parti !"), findsOneWidget);
+
+    // Well into the interval, the mascot should still be there with one of
+    // the near-end phrases, and nothing should have thrown.
+    await elapse(tester, const Duration(milliseconds: 3100));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(Mascot), findsOneWidget);
+    expect(
+      find.text('Derniers efforts !'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('settings decide between sound and haptics', (tester) async {

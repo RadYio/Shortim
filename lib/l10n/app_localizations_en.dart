@@ -284,19 +284,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'A vibration comes with beeps, interval changes and the end of the series.';
 
   @override
-  String get accentSection => 'ACCENT COLOUR';
-
-  @override
-  String get accentCream => 'Cream';
-
-  @override
-  String get accentGold => 'Matte gold';
-
-  @override
-  String get accentCoral => 'Soft coral';
-
-  @override
-  String get accentTeal => 'Deep teal';
+  String get paletteSection => 'COLOURS';
 
   @override
   String get seriesSection => 'SAVED SERIES';

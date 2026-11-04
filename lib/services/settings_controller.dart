@@ -25,27 +25,27 @@ class AppSettings {
     this.soundEnabled = true,
     this.soundTheme = SoundTheme.classic,
     this.haptics = true,
-    this.accent = AccentColor.cream,
+    this.palette = AppPalette.cloud,
   });
 
   final AppLanguage language;
   final bool soundEnabled;
   final SoundTheme soundTheme;
   final bool haptics;
-  final AccentColor accent;
+  final AppPalette palette;
 
   AppSettings copyWith({
     AppLanguage? language,
     bool? soundEnabled,
     SoundTheme? soundTheme,
     bool? haptics,
-    AccentColor? accent,
+    AppPalette? palette,
   }) => AppSettings(
     language: language ?? this.language,
     soundEnabled: soundEnabled ?? this.soundEnabled,
     soundTheme: soundTheme ?? this.soundTheme,
     haptics: haptics ?? this.haptics,
-    accent: accent ?? this.accent,
+    palette: palette ?? this.palette,
   );
 
   Map<String, Object> toJson() => {
@@ -53,7 +53,7 @@ class AppSettings {
     'soundEnabled': soundEnabled,
     'soundTheme': soundTheme.name,
     'haptics': haptics,
-    'accent': accent.name,
+    'palette': palette.name,
   };
 
   /// Unknown or missing values fall back to the defaults one by one.
@@ -66,7 +66,7 @@ class AppSettings {
       soundEnabled: json['soundEnabled'] as bool? ?? d.soundEnabled,
       soundTheme: byName(SoundTheme.values, json['soundTheme'], d.soundTheme),
       haptics: json['haptics'] as bool? ?? d.haptics,
-      accent: byName(AccentColor.values, json['accent'], d.accent),
+      palette: byName(AppPalette.values, json['palette'], d.palette),
     );
   }
 }

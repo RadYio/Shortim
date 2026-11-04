@@ -360,7 +360,7 @@ class _SetupScreenState extends State<SetupScreen> {
                   child: Text(
                     context.l10n.emptyIntervalWarning,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.brand400,
                       fontSize: 13,
                     ),

@@ -104,22 +104,23 @@ void main() {
     });
   });
 
-  testWidgets('accent colour switches the theme and persists', (tester) async {
+  testWidgets('palette switches the theme and persists', (tester) async {
     await pumpApp(tester);
     await openSettings(tester);
 
-    await reveal(tester, swatch('Or mat'));
-    await tester.tap(swatch('Or mat'));
+    await reveal(tester, swatch('Volt'));
+    await tester.tap(swatch('Volt'));
     await tester.pumpAndSettle();
     final theme = Theme.of(tester.element(find.byType(Scaffold).last));
-    expect(theme.colorScheme.primary, AccentColor.gold.color);
-    expect((await storedSettings())['accent'], 'gold');
+    expect(theme.colorScheme.primary, AppPalette.volt.accent);
+    expect((await storedSettings())['palette'], 'volt');
   });
 
   testWidgets('choosing a sound theme previews and applies it', (tester) async {
     await pumpApp(tester);
     await openSettings(tester);
 
+    await reveal(tester, find.text('Marimba'));
     await tester.tap(find.text('Marimba'));
     await tester.pumpAndSettle();
     expect(sounds.theme, SoundTheme.marimba);
@@ -127,6 +128,7 @@ void main() {
     expect((await storedSettings())['soundTheme'], 'marimba');
 
     // Sound off: themes can no longer be picked.
+    await reveal(tester, find.text('Sons'));
     await tester.tap(find.text('Sons'));
     await tester.pumpAndSettle();
     expect((await storedSettings())['soundEnabled'], false);
@@ -177,12 +179,12 @@ void main() {
       soundEnabled: false,
       soundTheme: SoundTheme.pulse,
       haptics: false,
-      accent: AccentColor.teal,
+      palette: AppPalette.mocha,
     );
     final back = AppSettings.fromJson(custom.toJson());
     expect(back.toJson(), custom.toJson());
 
-    final odd = AppSettings.fromJson({'language': 'klingon', 'accent': 1});
+    final odd = AppSettings.fromJson({'language': 'klingon', 'palette': 1});
     expect(odd.toJson(), const AppSettings().toJson());
   });
 }

@@ -285,19 +285,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une vibration accompagne les bips, les changements d\'intervalle et la fin de série.';
 
   @override
-  String get accentSection => 'COULEUR D\'ACCENT';
-
-  @override
-  String get accentCream => 'Crème';
-
-  @override
-  String get accentGold => 'Or mat';
-
-  @override
-  String get accentCoral => 'Corail doux';
-
-  @override
-  String get accentTeal => 'Teal profond';
+  String get paletteSection => 'COULEURS';
 
   @override
   String get seriesSection => 'SÉRIES ENREGISTRÉES';

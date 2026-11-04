@@ -80,7 +80,7 @@ class _ShortimAppState extends State<ShortimApp> {
           return MaterialApp(
             title: 'Shortim',
             debugShowCheckedModeBanner: false,
-            theme: buildTheme(accent: settings.accent),
+            theme: buildTheme(palette: settings.palette),
             themeAnimationDuration: AppMotion.slow,
             themeAnimationCurve: AppMotion.brand,
             locale: settings.language.locale,

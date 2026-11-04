@@ -47,8 +47,8 @@ class _DurationPickerState extends State<DurationPicker> {
               },
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               ':',
               style: TextStyle(fontSize: 30, color: AppColors.brand500),
@@ -158,7 +158,7 @@ class _SelectionOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border.symmetric(
           horizontal: BorderSide(color: AppColors.brand700),
         ),

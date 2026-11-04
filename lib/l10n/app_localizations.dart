@@ -542,35 +542,11 @@ abstract class AppLocalizations {
   /// **'Une vibration accompagne les bips, les changements d\'intervalle et la fin de série.'**
   String get hapticsHint;
 
-  /// No description provided for @accentSection.
+  /// No description provided for @paletteSection.
   ///
   /// In fr, this message translates to:
-  /// **'COULEUR D\'ACCENT'**
-  String get accentSection;
-
-  /// No description provided for @accentCream.
-  ///
-  /// In fr, this message translates to:
-  /// **'Crème'**
-  String get accentCream;
-
-  /// No description provided for @accentGold.
-  ///
-  /// In fr, this message translates to:
-  /// **'Or mat'**
-  String get accentGold;
-
-  /// No description provided for @accentCoral.
-  ///
-  /// In fr, this message translates to:
-  /// **'Corail doux'**
-  String get accentCoral;
-
-  /// No description provided for @accentTeal.
-  ///
-  /// In fr, this message translates to:
-  /// **'Teal profond'**
-  String get accentTeal;
+  /// **'COULEURS'**
+  String get paletteSection;
 
   /// No description provided for @seriesSection.
   ///

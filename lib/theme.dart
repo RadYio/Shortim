@@ -3,29 +3,61 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// UI colour tokens (see CLAUDE.md §1). Brand assets in `assets/logos/` use
 /// their own fixed colours (#0A0A0A / #F2F2F0) on purpose.
+///
+/// Mutable on purpose: [AppPalette] pairs a background with one typography/
+/// accent colour, and [AppColors.apply] derives every other token from that
+/// single pair. `buildTheme` calls it before building the `ThemeData`, so by
+/// the time any widget below `MaterialApp` reads these (most do, directly,
+/// rather than through `Theme.of(context)`) they already reflect the
+/// current palette — Flutter builds top-down in the same frame.
 abstract final class AppColors {
-  static const ink = Color(0xFF050506);
-  static const surface = Color(0xFF0E0E10); // cards, a notch above ink
-  static const surfaceRaised = Color(0xFF17171A); // dialogs, drag proxy
-  static const cream = Color(0xFFF4F1EA);
-  static const text = Color(0xFFF7F7F8);
-  static const brand300 = Color(0xFFD4D4D8);
-  static const brand400 = Color(0xFFA1A1AA);
-  static const brand500 = Color(0xFF71717A);
-  static const brand600 = Color(0xFF52525B);
-  static const brand700 = Color(0xFF3F3F46);
+  static Color ink = AppPalette.cloud.background;
+  static Color surface = const Color(0xFF0E0E10); // cards, a notch above ink
+  static Color surfaceRaised = const Color(0xFF17171A); // dialogs, proxy
+  static Color text = AppPalette.cloud.accent;
+  static Color brand300 = const Color(0xFFD4D4D8);
+  static Color brand400 = const Color(0xFFA1A1AA);
+  static Color brand500 = const Color(0xFF71717A);
+  static Color brand600 = const Color(0xFF52525B);
+  static Color brand700 = const Color(0xFF3F3F46);
+
+  /// Recomputes every token above from [palette]'s background/accent pair.
+  static void apply(AppPalette palette) {
+    Color mix(double t) => Color.lerp(palette.background, palette.accent, t)!;
+    ink = palette.background;
+    surface = mix(0.06);
+    surfaceRaised = mix(0.10);
+    text = palette.accent;
+    brand300 = mix(0.72);
+    brand400 = mix(0.52);
+    brand500 = mix(0.36);
+    brand600 = mix(0.24);
+    brand700 = mix(0.14);
+  }
 }
 
-/// Accent colours selectable in Settings. Cream is the default.
-enum AccentColor {
-  cream(AppColors.cream),
-  gold(Color(0xFFC9A35A)),
-  coral(Color(0xFFE8846B)),
-  teal(Color(0xFF4FB6A3));
+/// A background/typography colour pair selectable in Settings — replaces
+/// the old single-hue "accent": font and highlights share [accent], the
+/// rest of the UI (surfaces, muted labels, borders) is derived from the mix
+/// of the two. Named after current colour-trend vocabulary.
+enum AppPalette {
+  /// Sporty, energetic: flashy lime on a near-black forest green.
+  volt('Volt', Color(0xFF0A130D), Color(0xFFC6FF3D)),
 
-  const AccentColor(this.color);
+  /// Calm, hazy — 2026's "frosted tints" mood.
+  chill('Chill', Color(0xFF0A0D16), Color(0xFF9FB4FF)),
 
-  final Color color;
+  /// Warm and cozy — Pantone 2025 Colour of the Year, Mocha Mousse.
+  mocha('Mocha', Color(0xFF150F0C), Color(0xFFC9966B)),
+
+  /// Minimal and serene — Pantone 2026 Colour of the Year, Cloud Dancer.
+  cloud('Cloud', Color(0xFF08080A), Color(0xFFF0EDE5));
+
+  const AppPalette(this.label, this.background, this.accent);
+
+  final String label;
+  final Color background;
+  final Color accent;
 }
 
 abstract final class AppMotion {
@@ -95,15 +127,16 @@ abstract final class AppText {
 
   /// Small uppercase mono eyebrow ("INTERVALLE 3/8"). Callers pass text
   /// already in capitals.
-  static TextStyle label({Color color = AppColors.brand400}) => mono(
+  static TextStyle label({Color? color}) => mono(
     fontSize: 12,
     fontWeight: FontWeight.w500,
     letterSpacing: 2.4,
-  ).copyWith(color: color);
+  ).copyWith(color: color ?? AppColors.brand400);
 }
 
-ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
-  final accentColor = accent.color;
+ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
+  AppColors.apply(palette);
+  final accentColor = palette.accent;
   const pill = StadiumBorder();
   const buttonText = TextStyle(fontSize: 17, fontWeight: FontWeight.w600);
   final base = ThemeData(
@@ -141,7 +174,7 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.text,
-        side: const BorderSide(color: AppColors.brand600),
+        side: BorderSide(color: AppColors.brand600),
         minimumSize: const Size.fromHeight(56),
         shape: pill,
         textStyle: buttonText.copyWith(fontWeight: FontWeight.w500),
@@ -159,7 +192,7 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
         foregroundColor: AppColors.brand300,
         selectedForegroundColor: AppColors.ink,
         selectedBackgroundColor: accentColor,
-        side: const BorderSide(color: AppColors.brand700),
+        side: BorderSide(color: AppColors.brand700),
         shape: pill,
         minimumSize: const Size.fromHeight(44),
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
@@ -168,33 +201,30 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.surfaceRaised,
       surfaceTintColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(24)),
         side: BorderSide(color: AppColors.brand700),
       ),
       // Same default font as the buttons/content inside it — the wordmark
       // (Playfair) is reserved for full-screen headers, never modals.
-      titleTextStyle: const TextStyle(
+      titleTextStyle: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: AppColors.text,
       ),
-      contentTextStyle: const TextStyle(
-        fontSize: 15,
-        color: AppColors.brand300,
-      ),
+      contentTextStyle: TextStyle(fontSize: 15, color: AppColors.brand300),
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.surfaceRaised,
       actionTextColor: accentColor,
-      contentTextStyle: const TextStyle(color: AppColors.text),
+      contentTextStyle: TextStyle(color: AppColors.text),
       behavior: SnackBarBehavior.floating,
-      shape: const StadiumBorder(side: BorderSide(color: AppColors.brand700)),
+      shape: StadiumBorder(side: BorderSide(color: AppColors.brand700)),
     ),
-    tooltipTheme: const TooltipThemeData(
+    tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
         color: AppColors.surfaceRaised,
-        borderRadius: BorderRadius.all(Radius.circular(8)),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
       ),
       textStyle: TextStyle(color: AppColors.text, fontSize: 13),
     ),
@@ -205,17 +235,17 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,
-      hintStyle: const TextStyle(color: AppColors.brand600),
-      helperStyle: const TextStyle(color: AppColors.brand400),
+      hintStyle: TextStyle(color: AppColors.brand600),
+      helperStyle: TextStyle(color: AppColors.brand400),
       helperMaxLines: 2,
       counterStyle: AppText.mono(fontSize: 11, color: AppColors.brand500),
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      border: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
+      border: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: AppColors.brand700),
       ),
-      enabledBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         borderSide: BorderSide(color: AppColors.brand700),
       ),
       focusedBorder: OutlineInputBorder(
@@ -245,11 +275,11 @@ ThemeData buildTheme({AccentColor accent = AccentColor.cream}) {
             : AppColors.brand600,
       ),
     ),
-    popupMenuTheme: const PopupMenuThemeData(
+    popupMenuTheme: PopupMenuThemeData(
       color: AppColors.surfaceRaised,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         side: BorderSide(color: AppColors.brand700),
       ),
       textStyle: TextStyle(fontSize: 15, color: AppColors.text),

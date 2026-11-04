@@ -94,11 +94,7 @@
   "hapticsSection": "VIBRATIONS",
   "hapticsToggle": "Vibrations",
   "hapticsHint": "Une vibration accompagne les bips, les changements d'intervalle et la fin de série.",
-  "accentSection": "COULEUR D'ACCENT",
-  "accentCream": "Crème",
-  "accentGold": "Or mat",
-  "accentCoral": "Corail doux",
-  "accentTeal": "Teal profond",
+  "paletteSection": "COULEURS",
   "seriesSection": "SÉRIES ENREGISTRÉES",
   "manageSeries": "Gérer mes séries",
   "manageSeriesHint": "Lancer, renommer ou supprimer vos séries."

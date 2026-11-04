@@ -79,11 +79,7 @@
   "hapticsSection": "VIBRATIONS",
   "hapticsToggle": "Vibrations",
   "hapticsHint": "A vibration comes with beeps, interval changes and the end of the series.",
-  "accentSection": "ACCENT COLOUR",
-  "accentCream": "Cream",
-  "accentGold": "Matte gold",
-  "accentCoral": "Soft coral",
-  "accentTeal": "Deep teal",
+  "paletteSection": "COLOURS",
   "seriesSection": "SAVED SERIES",
   "manageSeries": "Manage my series",
   "manageSeriesHint": "Start, rename or delete your series."

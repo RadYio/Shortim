@@ -44,6 +44,15 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Text(l10n.settings, style: AppText.wordmark(fontSize: 32)),
             _Section(
+              label: l10n.paletteSection,
+              children: [
+                _PalettePicker(
+                  selected: settings.palette,
+                  onSelect: (p) => update((x) => x.copyWith(palette: p)),
+                ),
+              ],
+            ),
+            _Section(
               label: l10n.languageSection,
               children: [
                 SizedBox(
@@ -122,16 +131,6 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
             _Section(
-              label: l10n.accentSection,
-              children: [
-                _AccentPicker(
-                  selected: settings.accent,
-                  nameOf: (a) => _accentName(l10n, a),
-                  onSelect: (a) => update((x) => x.copyWith(accent: a)),
-                ),
-              ],
-            ),
-            _Section(
               label: l10n.seriesSection,
               children: [
                 _Card(
@@ -152,7 +151,7 @@ class SettingsScreen extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               l10n.manageSeriesHint,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 color: AppColors.brand400,
                               ),
@@ -160,10 +159,7 @@ class SettingsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.brand500,
-                      ),
+                      Icon(Icons.chevron_right, color: AppColors.brand500),
                     ],
                   ),
                 ),
@@ -190,14 +186,6 @@ class SettingsScreen extends StatelessWidget {
         SoundTheme.bell => l10n.soundThemeBell,
         SoundTheme.marimba => l10n.soundThemeMarimba,
         SoundTheme.pulse => l10n.soundThemePulse,
-      };
-
-  static String _accentName(AppLocalizations l10n, AccentColor accent) =>
-      switch (accent) {
-        AccentColor.cream => l10n.accentCream,
-        AccentColor.gold => l10n.accentGold,
-        AccentColor.coral => l10n.accentCoral,
-        AccentColor.teal => l10n.accentTeal,
       };
 }
 
@@ -234,7 +222,7 @@ class _Hint extends StatelessWidget {
       padding: const EdgeInsets.only(top: 10),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 13, color: AppColors.brand500),
+        style: TextStyle(fontSize: 13, color: AppColors.brand500),
       ),
     );
   }
@@ -313,7 +301,7 @@ class _Toggle extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     color: AppColors.brand400,
                   ),
@@ -395,16 +383,14 @@ class _ThemeTile extends StatelessWidget {
   }
 }
 
-class _AccentPicker extends StatelessWidget {
-  const _AccentPicker({
-    required this.selected,
-    required this.nameOf,
-    required this.onSelect,
-  });
+/// Bubble split diagonally (top-right → bottom-left): background colour on
+/// one half, typography/accent colour on the other — exactly the pairing
+/// that choosing a palette changes, instead of a single accent dot.
+class _PalettePicker extends StatelessWidget {
+  const _PalettePicker({required this.selected, required this.onSelect});
 
-  final AccentColor selected;
-  final String Function(AccentColor) nameOf;
-  final ValueChanged<AccentColor> onSelect;
+  final AppPalette selected;
+  final ValueChanged<AppPalette> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -413,41 +399,36 @@ class _AccentPicker extends StatelessWidget {
       children: [
         Row(
           children: [
-            for (final accent in AccentColor.values)
+            for (final palette in AppPalette.values)
               Padding(
                 padding: const EdgeInsets.only(right: 16),
                 child: Semantics(
                   button: true,
-                  selected: accent == selected,
-                  label: nameOf(accent),
+                  selected: palette == selected,
+                  label: palette.label,
                   excludeSemantics: true,
                   child: GestureDetector(
-                    onTap: () => onSelect(accent),
+                    onTap: () => onSelect(palette),
                     child: AnimatedContainer(
                       duration: AppMotion.base,
                       curve: AppMotion.brand,
-                      width: 52,
-                      height: 52,
-                      padding: const EdgeInsets.all(5),
+                      width: 56,
+                      height: 56,
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: accent == selected
-                              ? accent.color
+                          color: palette == selected
+                              ? palette.accent
                               : Colors.transparent,
                           width: 1.5,
                         ),
                       ),
                       child: AnimatedScale(
-                        scale: accent == selected ? 1 : 0.82,
+                        scale: palette == selected ? 1 : 0.82,
                         duration: AppMotion.slow,
                         curve: AppMotion.emphasis,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: accent.color,
-                          ),
-                        ),
+                        child: _PaletteBubble(palette: palette),
                       ),
                     ),
                   ),
@@ -459,7 +440,7 @@ class _AccentPicker extends StatelessWidget {
         AnimatedSwitcher(
           duration: AppMotion.base,
           child: Text(
-            nameOf(selected),
+            selected.label,
             key: ValueKey(selected),
             style: AppText.mono(fontSize: 13, color: AppColors.brand300),
           ),
@@ -467,4 +448,40 @@ class _AccentPicker extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The diagonally-split preview circle itself.
+class _PaletteBubble extends StatelessWidget {
+  const _PaletteBubble({required this.palette});
+
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipOval(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: palette.background),
+          ClipPath(
+            clipper: _DiagonalClipper(),
+            child: ColoredBox(color: palette.accent),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Cuts from the top-right corner to the bottom-left one.
+class _DiagonalClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) => Path()
+    ..moveTo(size.width, 0)
+    ..lineTo(size.width, size.height)
+    ..lineTo(0, size.height)
+    ..close();
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

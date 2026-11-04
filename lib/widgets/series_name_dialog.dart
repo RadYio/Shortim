@@ -87,7 +87,7 @@ class _SeriesNameDialogState extends State<_SeriesNameDialog> {
         maxLength: SavedSeries.maxNameLength,
         textCapitalization: TextCapitalization.sentences,
         textInputAction: TextInputAction.done,
-        style: const TextStyle(fontSize: 17, color: AppColors.text),
+        style: TextStyle(fontSize: 17, color: AppColors.text),
         decoration: InputDecoration(
           hintText: context.l10n.nameHint,
           helperText: clashes && !renaming ? context.l10n.replaceHelper : null,

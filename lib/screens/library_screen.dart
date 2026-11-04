@@ -249,7 +249,7 @@ class _LibraryScreenState extends State<LibraryScreen>
           color: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: AppColors.brand700),
+            side: BorderSide(color: AppColors.brand700),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
@@ -266,7 +266,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                           saved.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: AppColors.text,
@@ -291,10 +291,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                   ),
                   PopupMenuButton<_Action>(
                     tooltip: context.l10n.options,
-                    icon: const Icon(
-                      Icons.more_vert,
-                      color: AppColors.brand400,
-                    ),
+                    icon: Icon(Icons.more_vert, color: AppColors.brand400),
                     onSelected: (action) => switch (action) {
                       _Action.rename => _rename(saved),
                       _Action.delete => _delete(saved),
@@ -341,13 +338,13 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             context.l10n.emptyLibraryTitle,
-            style: const TextStyle(fontSize: 17, color: AppColors.brand300),
+            style: TextStyle(fontSize: 17, color: AppColors.brand300),
           ),
           const SizedBox(height: 8),
           Text(
             context.l10n.emptyLibraryHint,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: AppColors.brand500),
+            style: TextStyle(fontSize: 14, color: AppColors.brand500),
           ),
         ],
       ),

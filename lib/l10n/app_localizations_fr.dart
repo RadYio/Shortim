@@ -345,4 +345,31 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get manageSeriesHint => 'Lancer, renommer ou supprimer vos séries.';
+
+  @override
+  String get mascotFresh1 => 'C\'est parti !';
+
+  @override
+  String get mascotFresh2 => 'On attaque !';
+
+  @override
+  String get mascotFresh3 => 'Prêt(e) à tout donner !';
+
+  @override
+  String get mascotMid1 => 'Accroche-toi !';
+
+  @override
+  String get mascotMid2 => 'Tiens bon !';
+
+  @override
+  String get mascotMid3 => 'Courage, tu tiens le rythme !';
+
+  @override
+  String get mascotNearEnd1 => 'Allez, presque fini !';
+
+  @override
+  String get mascotNearEnd2 => 'Derniers efforts !';
+
+  @override
+  String get mascotNearEnd3 => 'Tiens encore un peu !';
 }

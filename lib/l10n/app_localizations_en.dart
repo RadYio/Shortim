@@ -344,4 +344,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manageSeriesHint => 'Start, rename or delete your series.';
+
+  @override
+  String get mascotFresh1 => 'Let\'s go!';
+
+  @override
+  String get mascotFresh2 => 'Here we go!';
+
+  @override
+  String get mascotFresh3 => 'Ready to give it all!';
+
+  @override
+  String get mascotMid1 => 'Hang in there!';
+
+  @override
+  String get mascotMid2 => 'Stay strong!';
+
+  @override
+  String get mascotMid3 => 'Keep the pace, you\'ve got this!';
+
+  @override
+  String get mascotNearEnd1 => 'Almost there, push!';
+
+  @override
+  String get mascotNearEnd2 => 'Final push!';
+
+  @override
+  String get mascotNearEnd3 => 'Just a little more!';
 }

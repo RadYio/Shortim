@@ -14,6 +14,7 @@ import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../services/timer_engine.dart';
 import '../theme.dart';
+import '../widgets/mascot.dart';
 
 /// Screen 2: runs the series. Starts as soon as it is displayed.
 class RunScreen extends StatefulWidget {
@@ -219,7 +220,9 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
                       refill: _refill,
                       finish: _finish,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 8),
+                    Mascot(progress: snap.progress),
+                    const SizedBox(height: 8),
                     _NextLabel(snapshot: snap),
                     const Spacer(),
                     AnimatedSwitcher(

@@ -661,6 +661,60 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Lancer, renommer ou supprimer vos séries.'**
   String get manageSeriesHint;
+
+  /// No description provided for @mascotFresh1.
+  ///
+  /// In fr, this message translates to:
+  /// **'C\'est parti !'**
+  String get mascotFresh1;
+
+  /// No description provided for @mascotFresh2.
+  ///
+  /// In fr, this message translates to:
+  /// **'On attaque !'**
+  String get mascotFresh2;
+
+  /// No description provided for @mascotFresh3.
+  ///
+  /// In fr, this message translates to:
+  /// **'Prêt(e) à tout donner !'**
+  String get mascotFresh3;
+
+  /// No description provided for @mascotMid1.
+  ///
+  /// In fr, this message translates to:
+  /// **'Accroche-toi !'**
+  String get mascotMid1;
+
+  /// No description provided for @mascotMid2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tiens bon !'**
+  String get mascotMid2;
+
+  /// No description provided for @mascotMid3.
+  ///
+  /// In fr, this message translates to:
+  /// **'Courage, tu tiens le rythme !'**
+  String get mascotMid3;
+
+  /// No description provided for @mascotNearEnd1.
+  ///
+  /// In fr, this message translates to:
+  /// **'Allez, presque fini !'**
+  String get mascotNearEnd1;
+
+  /// No description provided for @mascotNearEnd2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Derniers efforts !'**
+  String get mascotNearEnd2;
+
+  /// No description provided for @mascotNearEnd3.
+  ///
+  /// In fr, this message translates to:
+  /// **'Tiens encore un peu !'**
+  String get mascotNearEnd3;
 }
 
 class _AppLocalizationsDelegate

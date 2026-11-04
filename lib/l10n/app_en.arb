@@ -98,5 +98,15 @@
   "paletteSection": "COLOURS",
   "seriesSection": "SAVED SERIES",
   "manageSeries": "Manage my series",
-  "manageSeriesHint": "Start, rename or delete your series."
+  "manageSeriesHint": "Start, rename or delete your series.",
+
+  "mascotFresh1": "Let's go!",
+  "mascotFresh2": "Here we go!",
+  "mascotFresh3": "Ready to give it all!",
+  "mascotMid1": "Hang in there!",
+  "mascotMid2": "Stay strong!",
+  "mascotMid3": "Keep the pace, you've got this!",
+  "mascotNearEnd1": "Almost there, push!",
+  "mascotNearEnd2": "Final push!",
+  "mascotNearEnd3": "Just a little more!"
 }

@@ -450,7 +450,15 @@ class _PalettePicker extends StatelessWidget {
   }
 }
 
-/// The diagonally-split preview circle itself.
+/// The preview circle itself: a 2×2 grid of the palette's four most
+/// distinctive roles (background, muted surface, accent, accent2) — reads
+/// as a genuine multi-colour scheme rather than one hue tinting everything.
+///
+/// Uses fixed-size quadrants (via [LayoutBuilder]) rather than nested
+/// `Expanded`/flex rows: a `Column`/`Row` of `Expanded` children placed
+/// inside this exact ancestor chain (`ClipOval` → `AnimatedScale` →
+/// `AnimatedContainer`) silently laid out to zero size in testing — fixed
+/// sizing sidesteps that without needing to track the cause down further.
 class _PaletteBubble extends StatelessWidget {
   const _PaletteBubble({required this.palette});
 
@@ -459,36 +467,32 @@ class _PaletteBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipOval(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          ColoredBox(color: palette.background),
-          // Lower-right half (the diagonal cut) carries both accents
-          // stacked, not one flat tint — reads as a real palette.
-          ClipPath(
-            clipper: _DiagonalClipper(),
-            child: Column(
-              children: [
-                Expanded(child: ColoredBox(color: palette.accent)),
-                Expanded(child: ColoredBox(color: palette.accent2)),
-              ],
-            ),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final half = constraints.biggest / 2;
+          Widget swatch(Color color) =>
+              SizedBox(width: half.width, height: half.height, child: ColoredBox(color: color));
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  swatch(palette.background),
+                  swatch(palette.muted),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  swatch(palette.accent),
+                  swatch(palette.accent2),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-}
-
-/// Cuts from the top-right corner to the bottom-left one.
-class _DiagonalClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) => Path()
-    ..moveTo(size.width, 0)
-    ..lineTo(size.width, size.height)
-    ..lineTo(0, size.height)
-    ..close();
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

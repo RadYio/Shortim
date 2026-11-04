@@ -11,61 +11,111 @@ import 'package:google_fonts/google_fonts.dart';
 /// rather than through `Theme.of(context)`) they already reflect the
 /// current palette — Flutter builds top-down in the same frame.
 abstract final class AppColors {
-  static Color ink = AppPalette.cloud.background;
+  static Color ink = AppPalette.sprint.background;
   static Color surface = const Color(0xFF0E0E10); // cards, a notch above ink
   static Color surfaceRaised = const Color(0xFF17171A); // dialogs, proxy
-  static Color text = AppPalette.cloud.accent;
-  static Color accent2 = AppPalette.cloud.accent2;
+  static Color text = AppPalette.sprint.text;
+  static Color accent2 = AppPalette.sprint.accent2;
   static Color brand300 = const Color(0xFFD4D4D8);
   static Color brand400 = const Color(0xFFA1A1AA);
   static Color brand500 = const Color(0xFF71717A);
   static Color brand600 = const Color(0xFF52525B);
   static Color brand700 = const Color(0xFF3F3F46);
 
-  /// Recomputes every token above from [palette]'s colours.
+  /// Recomputes every token above from [palette]'s colours. Unlike the old
+  /// scheme (always mixing toward near-black `background`), this derives the
+  /// neutral ramp from `muted` → `text`, which are chosen per-palette to
+  /// already sit at the right end of the brightness scale — so this reads
+  /// correctly for both dark palettes (sprint, gymFloor) and light ones
+  /// (endurance, flow) without any brightness-specific branching here.
   static void apply(AppPalette palette) {
-    Color mix(double t) => Color.lerp(palette.background, palette.accent, t)!;
+    Color mix(double t) => Color.lerp(palette.muted, palette.text, t)!;
     ink = palette.background;
-    surface = mix(0.06);
-    surfaceRaised = mix(0.10);
-    text = palette.accent;
+    text = palette.text;
     accent2 = palette.accent2;
-    brand300 = mix(0.72);
-    brand400 = mix(0.52);
-    brand500 = mix(0.36);
-    brand600 = mix(0.24);
-    brand700 = mix(0.14);
+    surface = palette.muted;
+    surfaceRaised = Color.lerp(palette.muted, palette.text, 0.10)!;
+    brand300 = mix(0.80);
+    brand400 = mix(0.58);
+    brand500 = mix(0.38);
+    brand600 = mix(0.18);
+    brand700 = Color.lerp(palette.background, palette.muted, 0.55)!;
   }
 }
 
-/// A background + two-accent trio selectable in Settings — replaces the old
-/// single-hue "accent". [accent] drives typography/numbers/links, [accent2]
-/// drives actions (the primary button, selections, switches): two distinct
-/// hues reading as a real palette rather than one colour tinting everything.
-/// Named after current colour-trend vocabulary.
+/// A 5-role palette selectable in Settings: [background]/[muted] are the two
+/// surface shades, [accent] drives typography/numbers/links, [accent2] drives
+/// actions (the primary button, selections, switches), and [text] is the
+/// dedicated readable body-text colour. Each palette also carries its own
+/// [brightness] — unlike the old scheme, these are genuinely different
+/// palettes rather than variations on one near-black background, and two of
+/// them (endurance, flow) are light.
 enum AppPalette {
-  /// Sporty, energetic: flashy lime text with a hot-coral call to action,
-  /// on a near-black forest green.
-  volt('Volt', Color(0xFF0A130D), Color(0xFFC6FF3D), Color(0xFFFF6B4A)),
+  /// Dark & energetic: acid lime numbers with a hot-coral call to action,
+  /// on a near-black background.
+  sprint(
+    'Sprint',
+    Brightness.dark,
+    Color(0xFF0D0D0D),
+    Color(0xFF1C1C1C),
+    Color(0xFFC8FF00),
+    Color(0xFFFF5C39),
+    Color(0xFFF2F2F2),
+  ),
 
-  /// Calm, hazy — 2026's "frosted tints" mood: periwinkle blue text with a
-  /// soft violet action colour.
-  chill('Chill', Color(0xFF0A0D16), Color(0xFF9FB4FF), Color(0xFFC9B6F3)),
+  /// Light & crisp: deep navy numbers with a punchy orange call to action,
+  /// on a clean white background.
+  endurance(
+    'Endurance',
+    Brightness.light,
+    Color(0xFFFFFFFF),
+    Color(0xFFEDF1F6),
+    Color(0xFF1D3557),
+    Color(0xFFFF7B00),
+    Color(0xFF13233A),
+  ),
 
-  /// Warm and cozy — Pantone 2025 Colour of the Year, Mocha Mousse, paired
-  /// with a muted amber-gold action colour.
-  mocha('Mocha', Color(0xFF150F0C), Color(0xFFC9966B), Color(0xFFE8B65A)),
+  /// Light & warm — sage green numbers with a terracotta call to action,
+  /// on a soft cream background.
+  flow(
+    'Flow',
+    Brightness.light,
+    Color(0xFFF8F6F1),
+    Color(0xFFE7E3D9),
+    Color(0xFF6B8F71),
+    Color(0xFFD08C60),
+    Color(0xFF2B2F2A),
+  ),
 
-  /// Minimal and serene — Pantone 2026 Colour of the Year, Cloud Dancer,
-  /// paired with a soft dusty-rose action colour.
-  cloud('Cloud', Color(0xFF08080A), Color(0xFFF0EDE5), Color(0xFFE0A8A0));
+  /// Dark & crisp — court blue numbers with a gold call to action, on a
+  /// charcoal background.
+  gymFloor(
+    'Gym Floor',
+    Brightness.dark,
+    Color(0xFF121417),
+    Color(0xFF1F2328),
+    Color(0xFF2D9CDB),
+    Color(0xFFF2C94C),
+    Color(0xFFE8EAED),
+  );
 
-  const AppPalette(this.label, this.background, this.accent, this.accent2);
+  const AppPalette(
+    this.label,
+    this.brightness,
+    this.background,
+    this.muted,
+    this.accent,
+    this.accent2,
+    this.text,
+  );
 
   final String label;
+  final Brightness brightness;
   final Color background;
+  final Color muted;
   final Color accent;
   final Color accent2;
+  final Color text;
 }
 
 abstract final class AppMotion {
@@ -142,26 +192,63 @@ abstract final class AppText {
   ).copyWith(color: color ?? AppColors.brand400);
 }
 
-ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
+/// Relative luminance contrast ratio between two colours (WCAG formula).
+double _contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  final brightest = la > lb ? la : lb;
+  final darkest = la > lb ? lb : la;
+  return (brightest + 0.05) / (darkest + 0.05);
+}
+
+/// Picks whichever of pure black/white reads better on [background] — used
+/// for text/icons drawn directly on a saturated accent colour, since a
+/// palette's `ink` (its *screen* background) only happens to double as a
+/// legible foreground by coincidence of brightness, not by design: for a
+/// light palette with a dark-but-not-black accent2 (e.g. `endurance`'s
+/// orange), `ink` (white) can fail contrast where black would not.
+Color _onColorFor(Color background) {
+  final onWhite = _contrastRatio(Colors.white, background);
+  final onBlack = _contrastRatio(Colors.black, background);
+  return onWhite >= onBlack ? Colors.white : Colors.black;
+}
+
+ThemeData buildTheme({AppPalette palette = AppPalette.sprint}) {
   AppColors.apply(palette);
   final accentColor = palette.accent;
   final actionColor = palette.accent2;
+  final isDark = palette.brightness == Brightness.dark;
+  final onAccent = _onColorFor(accentColor);
+  final onAction = _onColorFor(actionColor);
   const pill = StadiumBorder();
   const buttonText = TextStyle(fontSize: 17, fontWeight: FontWeight.w600);
+  final scheme = isDark
+      ? ColorScheme.dark(
+          primary: actionColor,
+          onPrimary: onAction,
+          secondary: accentColor,
+          onSecondary: onAccent,
+          surface: AppColors.ink,
+          onSurface: AppColors.text,
+          surfaceContainerHighest: AppColors.surfaceRaised,
+          outline: AppColors.brand700,
+          outlineVariant: AppColors.brand700,
+        )
+      : ColorScheme.light(
+          primary: actionColor,
+          onPrimary: onAction,
+          secondary: accentColor,
+          onSecondary: onAccent,
+          surface: AppColors.ink,
+          onSurface: AppColors.text,
+          surfaceContainerHighest: AppColors.surfaceRaised,
+          outline: AppColors.brand700,
+          outlineVariant: AppColors.brand700,
+        );
   final base = ThemeData(
-    brightness: Brightness.dark,
+    brightness: palette.brightness,
     useMaterial3: true,
-    colorScheme: ColorScheme.dark(
-      primary: actionColor,
-      onPrimary: AppColors.ink,
-      secondary: accentColor,
-      onSecondary: AppColors.ink,
-      surface: AppColors.ink,
-      onSurface: AppColors.text,
-      surfaceContainerHighest: AppColors.surfaceRaised,
-      outline: AppColors.brand700,
-      outlineVariant: AppColors.brand700,
-    ),
+    colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.ink,
   );
   return base.copyWith(
@@ -172,7 +259,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: actionColor,
-        foregroundColor: AppColors.ink,
+        foregroundColor: onAction,
         disabledBackgroundColor: AppColors.brand700,
         disabledForegroundColor: AppColors.brand500,
         minimumSize: const Size.fromHeight(56),
@@ -199,7 +286,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
         foregroundColor: AppColors.brand300,
-        selectedForegroundColor: AppColors.ink,
+        selectedForegroundColor: onAction,
         selectedBackgroundColor: actionColor,
         side: BorderSide(color: AppColors.brand700),
         shape: pill,
@@ -270,7 +357,7 @@ ThemeData buildTheme({AppPalette palette = AppPalette.cloud}) {
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith(
         (states) => states.contains(WidgetState.selected)
-            ? AppColors.ink
+            ? onAction
             : AppColors.brand400,
       ),
       trackColor: WidgetStateProperty.resolveWith(

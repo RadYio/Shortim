@@ -123,5 +123,11 @@
   "mascotMid3": "Courage, tu tiens le rythme !",
   "mascotNearEnd1": "Allez, presque fini !",
   "mascotNearEnd2": "Derniers efforts !",
-  "mascotNearEnd3": "Tiens encore un peu !"
+  "mascotNearEnd3": "Tiens encore un peu !",
+  "mascotPaused1": "On souffle un peu.",
+  "mascotPaused2": "Pause, tu l'as méritée.",
+  "mascotPaused3": "Reprends ton souffle.",
+  "mascotFinished1": "Bravo, série terminée !",
+  "mascotFinished2": "Bien joué !",
+  "mascotFinished3": "Objectif atteint !"
 }

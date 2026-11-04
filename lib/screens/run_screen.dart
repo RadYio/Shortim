@@ -204,6 +204,7 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
             if (!didPop) _confirmStop();
           },
           child: Scaffold(
+            backgroundColor: AppColors.ink,
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -221,7 +222,11 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
                       finish: _finish,
                     ),
                     const SizedBox(height: 8),
-                    Mascot(progress: snap.progress),
+                    Mascot(
+                      progress: snap.progress,
+                      paused: snap.status == TimerStatus.paused,
+                      finished: finished,
+                    ),
                     const SizedBox(height: 8),
                     _NextLabel(snapshot: snap),
                     const Spacer(),

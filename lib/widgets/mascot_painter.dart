@@ -6,15 +6,30 @@ import 'package:flutter/widgets.dart';
 /// How far into the running interval the countdown is, used to decide which
 /// face the mascot pulls. Kept distinct from any timing type: this is a pure
 /// presentation state derived from [TimerSnapshot.progress].
-enum MascotExpression { fresh, mid, nearEnd }
+enum MascotExpression { resting, fresh, mid, nearEnd, triumphant }
 
 /// Picks the expression from the fraction of the current interval already
 /// elapsed (`TimerSnapshot.progress`, in `[0, 1]`). A free function on
 /// purpose, so the thresholds are unit-testable without pumping a widget.
+/// Only ever returns one of the three "running" expressions — [resting] and
+/// [triumphant] are driven by run status, see [mascotExpressionForState].
 MascotExpression mascotExpressionForProgress(double progress) {
   if (progress < 0.4) return MascotExpression.fresh;
   if (progress < 0.75) return MascotExpression.mid;
   return MascotExpression.nearEnd;
+}
+
+/// Full expression, folding in run status: [finished] takes priority (the
+/// series is over, win face), then [paused] (catching their breath), and
+/// otherwise the usual progress-driven face from [mascotExpressionForProgress].
+MascotExpression mascotExpressionForState({
+  required bool paused,
+  required bool finished,
+  required double progress,
+}) {
+  if (finished) return MascotExpression.triumphant;
+  if (paused) return MascotExpression.resting;
+  return mascotExpressionForProgress(progress);
 }
 
 /// Continuous face parameters, all in 0..1 (`mouthCurve` in -1..1), so two
@@ -55,11 +70,32 @@ const nearEndFrame = (
   sweat: 1.0,
 );
 
+/// Paused: catching their breath — brows relaxed, a calmer half-smile, the
+/// sweat from the effort so far still lingering a little.
+const restingFrame = (
+  browFurrow: -0.15,
+  mouthCurve: 0.3,
+  mouthOpen: 0.0,
+  tongue: 0.0,
+  sweat: 0.25,
+);
+
+/// Series finished: brows lifted, mouth wide open in a cheer, dried off.
+const triumphantFrame = (
+  browFurrow: -0.55,
+  mouthCurve: 1.0,
+  mouthOpen: 0.75,
+  tongue: 0.0,
+  sweat: 0.0,
+);
+
 /// The frame drawn for a given [MascotExpression].
 MascotFrame frameFor(MascotExpression expression) => switch (expression) {
+  MascotExpression.resting => restingFrame,
   MascotExpression.fresh => freshFrame,
   MascotExpression.mid => midFrame,
   MascotExpression.nearEnd => nearEndFrame,
+  MascotExpression.triumphant => triumphantFrame,
 };
 
 /// Linear interpolation between two frames, field by field.
@@ -91,7 +127,7 @@ class MascotPainter extends CustomPainter {
     canvas.scale(size.width / 100, size.height / 100);
     final stroke = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 9
+      ..strokeWidth = 6
       ..strokeCap = StrokeCap.round
       ..color = color;
 
@@ -105,9 +141,9 @@ class MascotPainter extends CustomPainter {
       math.pi * 1.12,
       math.pi * 0.76,
       false,
-      stroke..strokeWidth = 12,
+      stroke..strokeWidth = 8,
     );
-    stroke.strokeWidth = 9;
+    stroke.strokeWidth = 6;
 
     // Eyebrows, furrowing inward as effort increases.
     final browLift = 6.0 * frame.browFurrow;
@@ -126,7 +162,7 @@ class MascotPainter extends CustomPainter {
   }
 
   void _paintMouth(Canvas canvas, Paint stroke) {
-    final mouthPaint = Paint.from(stroke)..strokeWidth = 7;
+    final mouthPaint = Paint.from(stroke)..strokeWidth = 5;
     if (frame.mouthOpen < 0.15) {
       // Closed mouth: a single curve, sagging into a smile ("u") or
       // flattening/inverting into a strained line ("n") as effort builds.

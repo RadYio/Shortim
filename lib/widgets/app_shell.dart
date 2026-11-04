@@ -6,6 +6,7 @@ import '../services/series_library.dart';
 import '../services/settings_controller.dart';
 import '../services/sound_service.dart';
 import '../services/storage_service.dart';
+import '../theme.dart';
 import 'floating_menu_bar.dart';
 import '../screens/library_screen.dart';
 import '../screens/settings_screen.dart';
@@ -65,6 +66,7 @@ class _AppShellState extends State<AppShell> {
     // future refactor changes how this shell is reached from the Navigator.
     SettingsScope.of(context);
     return Scaffold(
+      backgroundColor: AppColors.ink,
       body: Stack(
         children: [
           IndexedStack(

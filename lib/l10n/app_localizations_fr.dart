@@ -372,4 +372,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mascotNearEnd3 => 'Tiens encore un peu !';
+
+  @override
+  String get mascotPaused1 => 'On souffle un peu.';
+
+  @override
+  String get mascotPaused2 => 'Pause, tu l\'as méritée.';
+
+  @override
+  String get mascotPaused3 => 'Reprends ton souffle.';
+
+  @override
+  String get mascotFinished1 => 'Bravo, série terminée !';
+
+  @override
+  String get mascotFinished2 => 'Bien joué !';
+
+  @override
+  String get mascotFinished3 => 'Objectif atteint !';
 }

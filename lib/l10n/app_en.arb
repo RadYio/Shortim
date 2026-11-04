@@ -108,5 +108,11 @@
   "mascotMid3": "Keep the pace, you've got this!",
   "mascotNearEnd1": "Almost there, push!",
   "mascotNearEnd2": "Final push!",
-  "mascotNearEnd3": "Just a little more!"
+  "mascotNearEnd3": "Just a little more!",
+  "mascotPaused1": "Catching your breath.",
+  "mascotPaused2": "Pause, you've earned it.",
+  "mascotPaused3": "Take a moment.",
+  "mascotFinished1": "Nice work, all done!",
+  "mascotFinished2": "Well played!",
+  "mascotFinished3": "Goal reached!"
 }

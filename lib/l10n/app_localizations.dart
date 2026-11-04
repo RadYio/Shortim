@@ -715,6 +715,42 @@ abstract class AppLocalizations {
   /// In fr, this message translates to:
   /// **'Tiens encore un peu !'**
   String get mascotNearEnd3;
+
+  /// No description provided for @mascotPaused1.
+  ///
+  /// In fr, this message translates to:
+  /// **'On souffle un peu.'**
+  String get mascotPaused1;
+
+  /// No description provided for @mascotPaused2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Pause, tu l\'as méritée.'**
+  String get mascotPaused2;
+
+  /// No description provided for @mascotPaused3.
+  ///
+  /// In fr, this message translates to:
+  /// **'Reprends ton souffle.'**
+  String get mascotPaused3;
+
+  /// No description provided for @mascotFinished1.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bravo, série terminée !'**
+  String get mascotFinished1;
+
+  /// No description provided for @mascotFinished2.
+  ///
+  /// In fr, this message translates to:
+  /// **'Bien joué !'**
+  String get mascotFinished2;
+
+  /// No description provided for @mascotFinished3.
+  ///
+  /// In fr, this message translates to:
+  /// **'Objectif atteint !'**
+  String get mascotFinished3;
 }
 
 class _AppLocalizationsDelegate

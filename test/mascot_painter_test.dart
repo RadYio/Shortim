@@ -22,6 +22,29 @@ void main() {
     });
   });
 
+  group('mascotExpressionForState', () {
+    test('finished wins over everything else', () {
+      expect(
+        mascotExpressionForState(paused: true, finished: true, progress: 0),
+        MascotExpression.triumphant,
+      );
+    });
+
+    test('paused shows the resting face while running progress is ignored', () {
+      expect(
+        mascotExpressionForState(paused: true, finished: false, progress: 0.9),
+        MascotExpression.resting,
+      );
+    });
+
+    test('otherwise falls back to the progress-driven face', () {
+      expect(
+        mascotExpressionForState(paused: false, finished: false, progress: 0.1),
+        MascotExpression.fresh,
+      );
+    });
+  });
+
   group('lerpMascotFrame', () {
     test('t = 0 returns the first frame, t = 1 the second', () {
       expect(lerpMascotFrame(freshFrame, nearEndFrame, 0), freshFrame);

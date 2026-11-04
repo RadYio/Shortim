@@ -82,7 +82,9 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('English'));
+      await tester.tap(find.byType(DropdownButtonFormField<AppLanguage>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('English').last);
       await tester.pumpAndSettle();
       expect(find.text('Settings'), findsOneWidget); // No restart needed.
       expect(find.text('LANGUAGE'), findsOneWidget);
@@ -121,8 +123,10 @@ void main() {
     await pumpApp(tester);
     await openSettings(tester);
 
-    await reveal(tester, find.text('Marimba'));
-    await tester.tap(find.text('Marimba'));
+    await reveal(tester, find.byType(DropdownButtonFormField<SoundTheme>));
+    await tester.tap(find.byType(DropdownButtonFormField<SoundTheme>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Marimba').last);
     await tester.pumpAndSettle();
     expect(sounds.theme, SoundTheme.marimba);
     expect(sounds.played, ['change']); // The preview.
@@ -133,8 +137,12 @@ void main() {
     await tester.tap(find.text('Sons'));
     await tester.pumpAndSettle();
     expect((await storedSettings())['soundEnabled'], false);
-    await tester.tap(find.text('Cloche douce'), warnIfMissed: false);
+    await tester.tap(
+      find.byType(DropdownButtonFormField<SoundTheme>),
+      warnIfMissed: false,
+    );
     await tester.pumpAndSettle();
+    expect(find.text('Cloche douce'), findsNothing); // Menu never opens.
     expect(sounds.theme, SoundTheme.marimba);
   });
 

@@ -752,8 +752,10 @@ class _LoopSelector extends StatelessWidget {
                   icon: Icons.remove,
                   tooltip: context.l10n.fewerRepeats,
                   size: 40,
-                  enabled: count > 1,
-                  onPressed: count > 1 ? () => onCountChanged(count - 1) : null,
+                  enabled: count > Series.minLoopCount,
+                  onPressed: count > Series.minLoopCount
+                      ? () => onCountChanged(count - 1)
+                      : null,
                 ),
                 SizedBox(
                   width: 120,

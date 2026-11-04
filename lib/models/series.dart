@@ -14,6 +14,7 @@ class Series {
 
   static const int maxIntervals = 30;
   static const int maxLoopCount = 99;
+  static const int minLoopCount = 2;
 
   final List<TimerInterval> intervals;
   final LoopMode loopMode;

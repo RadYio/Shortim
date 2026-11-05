@@ -127,7 +127,9 @@ class AudioplayersSoundService implements SoundService {
   Future<void> _play(AudioPlayer player) async {
     if (!_ready) return;
     try {
-      await _duck();
+      // Don't hold the cue back on the AVAudioSession round-trips: the digit
+      // on screen updates synchronously, so the duck runs in parallel.
+      unawaited(_duck());
       // With ReleaseMode.stop the source stays loaded: rewind and replay.
       await player.stop();
       await player.resume();

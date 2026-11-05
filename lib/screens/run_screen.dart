@@ -14,6 +14,7 @@ import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../services/timer_engine.dart';
 import '../theme.dart';
+import '../widgets/app_confirm_dialog.dart';
 import '../widgets/mascot.dart';
 
 /// Screen 2: runs the series. Starts as soon as it is displayed.
@@ -167,23 +168,14 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _confirmStop() async {
-    final stop = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.stopTitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.continueRun),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.stop),
-          ),
-        ],
-      ),
+    final stop = await AppConfirmDialog.show(
+      context,
+      title: context.l10n.stopTitle,
+      confirmLabel: context.l10n.stop,
+      cancelLabel: context.l10n.continueRun,
+      destructive: true,
     );
-    if ((stop ?? false) && mounted) _leave();
+    if (stop && mounted) _leave();
   }
 
   void _leave() {

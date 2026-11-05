@@ -10,6 +10,7 @@ import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../services/timer_engine.dart';
 import '../theme.dart';
+import '../widgets/app_confirm_dialog.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/duration_picker.dart';
 import '../widgets/round_icon_button.dart';
@@ -115,25 +116,15 @@ class _SetupScreenState extends State<SetupScreen> {
       await widget.storage.clearRun();
       return;
     }
-    final resume = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.interruptedTitle),
-        content: Text(context.l10n.interruptedBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.no),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.resume),
-          ),
-        ],
-      ),
+    final resume = await AppConfirmDialog.show(
+      context,
+      title: context.l10n.interruptedTitle,
+      body: context.l10n.interruptedBody,
+      confirmLabel: context.l10n.resume,
+      cancelLabel: context.l10n.no,
     );
     if (!mounted) return;
-    if (resume ?? false) {
+    if (resume) {
       _openRun(saved.series, restoreFrom: saved.state);
     } else {
       await widget.storage.clearRun();

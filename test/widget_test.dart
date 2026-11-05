@@ -74,7 +74,12 @@ void main() {
     await tester.tap(find.text('Arrêter'));
     await tester.pumpAndSettle();
     expect(find.text('Arrêter la série ?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(TextButton, 'Arrêter'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(OutlinedButton, 'Arrêter'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Démarrer'), findsOneWidget);

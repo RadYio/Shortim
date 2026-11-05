@@ -74,10 +74,18 @@ void main() {
     await tester.tap(find.text('Arrêter'));
     await tester.pumpAndSettle();
     expect(find.text('Arrêter la série ?'), findsOneWidget);
+    // "Arrêter" is the primary (filled) action, "Continuer" the secondary.
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(OutlinedButton, 'Continuer'),
+      ),
+      findsOneWidget,
+    );
     await tester.tap(
       find.descendant(
         of: find.byType(AlertDialog),
-        matching: find.widgetWithText(OutlinedButton, 'Arrêter'),
+        matching: find.widgetWithText(FilledButton, 'Arrêter'),
       ),
     );
     await tester.pumpAndSettle();

@@ -173,7 +173,6 @@ class _RunScreenState extends State<RunScreen> with TickerProviderStateMixin {
       title: context.l10n.stopTitle,
       confirmLabel: context.l10n.stop,
       cancelLabel: context.l10n.continueRun,
-      destructive: true,
     );
     if (stop && mounted) _leave();
   }

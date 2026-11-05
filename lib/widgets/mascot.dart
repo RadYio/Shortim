@@ -106,8 +106,8 @@ class _MascotState extends State<Mascot> with SingleTickerProviderStateMixin {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 44,
-          height: 44,
+          width: 56,
+          height: 56,
           child: AnimatedBuilder(
             animation: _morph,
             builder: (context, _) {
@@ -115,7 +115,7 @@ class _MascotState extends State<Mascot> with SingleTickerProviderStateMixin {
               return CustomPaint(
                 painter: MascotPainter(
                   frame: lerpMascotFrame(_from, _to, t),
-                  color: AppColors.accent2,
+                  accentColor: AppColors.accent2,
                 ),
               );
             },

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'dart:ui' show lerpDouble;
 
+import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/widgets.dart';
 
 /// How far into the running interval the countdown is, used to decide which
@@ -107,95 +109,247 @@ MascotFrame lerpMascotFrame(MascotFrame a, MascotFrame b, double t) => (
   sweat: lerpDouble(a.sweat, b.sweat, t)!,
 );
 
-/// A round-headed, stroke-only mascot wearing a sporty headband, styled
-/// like `ShortimMarkPainter`: single colour, ~9px strokes, drawn on a
-/// 100×100 grid. [frame] is a continuous blend of two [MascotExpression]s
-/// so transitions can be animated smoothly by the caller.
+/// A shaded, rooster-shaped "sports coach" mascot — gradients and a soft
+/// ground shadow give it volume (a 3D *look*, rendered flat: this stays a
+/// `CustomPainter`, no mesh/asset, so [frame] can keep morphing it live
+/// frame by frame exactly like the previous flat version did) on a 100×100
+/// grid. The comb/beak/wattle/feathers use a fixed warm palette so the bird
+/// stays recognisable in every app palette; only the headband — the one
+/// "branded" item it wears — follows [accentColor] (the current palette's
+/// accent2), so it always matches the rest of the UI.
 class MascotPainter extends CustomPainter {
-  const MascotPainter({required this.frame, required this.color});
+  const MascotPainter({required this.frame, required this.accentColor});
 
   final MascotFrame frame;
-  final Color color;
+  final Color accentColor;
 
-  static const _headCenter = Offset(50, 54);
-  static const _headRadius = 32.0;
-  static const _mouthY = 66.0;
-  static const _mouthHalfWidth = 11.0;
+  static const _headCenter = Offset(50, 58);
+  static const _headRadius = 27.0;
+  static const _beakY = 64.0;
+
+  // Fixed "rooster" palette — independent of the app's theme, so the bird
+  // itself always reads the same way; only the headband is themed.
+  static const _featherLight = Color(0xFFFBE2A7);
+  static const _featherDark = Color(0xFFD99A45);
+  static const _combLight = Color(0xFFFF7A59);
+  static const _combDark = Color(0xFFD03A1F);
+  static const _beakLight = Color(0xFFFFCE63);
+  static const _beakDark = Color(0xFFE28A1E);
+  static const _ink = Color(0xFF3B2A1C);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / 100, size.height / 100);
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..color = color;
-
-    // Head outline.
-    canvas.drawCircle(_headCenter, _headRadius, stroke);
-
-    // Sporty terry-cloth headband: a thick arc across the forehead.
-    final bandRect = Rect.fromCircle(center: _headCenter, radius: _headRadius);
-    canvas.drawArc(
-      bandRect,
-      math.pi * 1.12,
-      math.pi * 0.76,
-      false,
-      stroke..strokeWidth = 8,
-    );
-    stroke.strokeWidth = 6;
-
-    // Eyebrows, furrowing inward as effort increases.
-    final browLift = 6.0 * frame.browFurrow;
-    canvas.drawLine(Offset(34, 42 + browLift), const Offset(44, 40), stroke);
-    canvas.drawLine(Offset(66, 42 + browLift), const Offset(56, 40), stroke);
-
-    // Eyes.
-    final eyePaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = color;
-    canvas.drawCircle(const Offset(39, 52), 3, eyePaint);
-    canvas.drawCircle(const Offset(61, 52), 3, eyePaint);
-
-    _paintMouth(canvas, stroke);
+    _paintGroundShadow(canvas);
+    _paintComb(canvas);
+    _paintWattle(canvas);
+    _paintHead(canvas);
+    _paintHeadband(canvas);
+    _paintEyebrows(canvas);
+    _paintEyes(canvas);
+    _paintBeak(canvas);
     _paintSweat(canvas);
   }
 
-  void _paintMouth(Canvas canvas, Paint stroke) {
-    final mouthPaint = Paint.from(stroke)..strokeWidth = 5;
-    if (frame.mouthOpen < 0.15) {
-      // Closed mouth: a single curve, sagging into a smile ("u") or
-      // flattening/inverting into a strained line ("n") as effort builds.
-      final curveDy = 8 * frame.mouthCurve;
-      final path = Path()
-        ..moveTo(50 - _mouthHalfWidth, _mouthY)
-        ..quadraticBezierTo(50, _mouthY + curveDy, 50 + _mouthHalfWidth, _mouthY);
-      canvas.drawPath(path, mouthPaint);
-      return;
-    }
-
-    // Open mouth: an oval outline, with the tongue poking out near the end.
-    final openHeight = 6 + 10 * frame.mouthOpen;
-    final mouthRect = Rect.fromCenter(
-      center: Offset(50, _mouthY + openHeight / 4),
-      width: _mouthHalfWidth * 2,
-      height: openHeight,
+  void _paintGroundShadow(Canvas canvas) {
+    final shadow = Paint()
+      ..color = Colors.black.withValues(alpha: 0.18)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawOval(
+      Rect.fromCenter(center: const Offset(50, 92), width: 34, height: 7),
+      shadow,
     );
-    canvas.drawOval(mouthRect, mouthPaint);
-    if (frame.tongue > 0.01) {
-      final tonguePaint = Paint()
-        ..style = PaintingStyle.fill
-        ..color = color.withValues(alpha: frame.tongue.clamp(0.0, 1.0));
-      final tongueRect = Rect.fromCenter(
-        center: Offset(
-          50,
-          mouthRect.center.dy + openHeight * 0.2 * frame.tongue,
+  }
+
+  /// Three overlapping lobes, each with its own radial gradient so the comb
+  /// doesn't read as one flat red shape.
+  void _paintComb(Canvas canvas) {
+    const centers = [Offset(38, 30), Offset(50, 22), Offset(62, 30)];
+    const radii = [8.0, 9.5, 8.0];
+    for (var i = 0; i < centers.length; i++) {
+      final paint = Paint()
+        ..shader = ui.Gradient.radial(
+          centers[i] - const Offset(2, 2),
+          radii[i] * 1.4,
+          [_combLight, _combDark],
+        );
+      canvas.drawCircle(centers[i], radii[i], paint);
+    }
+  }
+
+  /// A small dangling lobe under the beak, same red family as the comb.
+  void _paintWattle(Canvas canvas) {
+    final center = Offset(50, _beakY + 10 + 3 * frame.sweat);
+    final paint = Paint()
+      ..shader = ui.Gradient.radial(center - const Offset(1, 1), 7, [
+        _combLight,
+        _combDark,
+      ]);
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: 9, height: 12),
+      paint,
+    );
+  }
+
+  /// The head itself: a radial gradient (lit from the upper-left) gives it
+  /// volume, plus a soft darker arc along the lower edge for extra depth.
+  void _paintHead(Canvas canvas) {
+    final body = Paint()
+      ..shader = ui.Gradient.radial(
+        _headCenter - const Offset(10, 10),
+        _headRadius * 1.9,
+        [_featherLight, _featherDark],
+      );
+    canvas.drawCircle(_headCenter, _headRadius, body);
+
+    final occlusion = Paint()
+      ..shader = ui.Gradient.radial(
+        _headCenter + const Offset(6, 10),
+        _headRadius * 1.1,
+        [_featherDark.withValues(alpha: 0.55), _featherDark.withValues(alpha: 0)],
+      );
+    canvas.drawCircle(_headCenter, _headRadius, occlusion);
+
+    // A small highlight catching the light, for shine.
+    final shine = Paint()
+      ..color = Colors.white.withValues(alpha: 0.35)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    canvas.drawCircle(_headCenter + const Offset(-12, -14), 5, shine);
+  }
+
+  /// A terry-cloth headband wrapping the forehead, following the curve of
+  /// the head (varying width + a highlight stripe) so it reads as cloth
+  /// wrapped around a round volume rather than a flat ring. The one themed
+  /// part of the mascot: [accentColor] is the current palette's accent2.
+  void _paintHeadband(Canvas canvas) {
+    final bandRect = Rect.fromCircle(
+      center: _headCenter,
+      radius: _headRadius + 1,
+    );
+    const start = math.pi * 1.1;
+    const sweep = math.pi * 0.8;
+    final band = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 11
+      ..shader = ui.Gradient.linear(
+        Offset(_headCenter.dx - _headRadius, _headCenter.dy - _headRadius),
+        Offset(_headCenter.dx + _headRadius, _headCenter.dy),
+        [
+          Color.lerp(accentColor, Colors.black, 0.25)!,
+          accentColor,
+          Color.lerp(accentColor, Colors.black, 0.25)!,
+        ],
+        const [0.0, 0.5, 1.0],
+      );
+    canvas.drawArc(bandRect, start, sweep, false, band);
+
+    final highlight = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2.5
+      ..color = Colors.white.withValues(alpha: 0.4);
+    canvas.drawArc(
+      bandRect.deflate(1.5),
+      start + 0.12,
+      sweep - 0.3,
+      false,
+      highlight,
+    );
+
+    // Little knotted tail flaring off to the side, for a sporty finish.
+    final knotPaint = Paint()..color = Color.lerp(accentColor, Colors.black, 0.15)!;
+    final knotCenter = Offset(
+      _headCenter.dx + (_headRadius + 1) * math.cos(start + sweep),
+      _headCenter.dy + (_headRadius + 1) * math.sin(start + sweep),
+    );
+    canvas.save();
+    canvas.translate(knotCenter.dx, knotCenter.dy);
+    canvas.rotate(0.6);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-2, 0, 4, 9),
+        const Radius.circular(2),
+      ),
+      knotPaint,
+    );
+    canvas.restore();
+  }
+
+  /// Furrowing inward (brows down, effort) or lifting (brows up, happy).
+  void _paintEyebrows(Canvas canvas) {
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.2
+      ..strokeCap = StrokeCap.round
+      ..color = _ink;
+    final browLift = 4.5 * frame.browFurrow;
+    canvas.drawLine(Offset(35, 45 + browLift), const Offset(42, 43), stroke);
+    canvas.drawLine(Offset(65, 45 + browLift), const Offset(58, 43), stroke);
+  }
+
+  /// White sclera + dark pupil with a tiny catchlight, for a glossy,
+  /// dimensional look instead of flat dots.
+  void _paintEyes(Canvas canvas) {
+    for (final cx in [39.0, 61.0]) {
+      final center = Offset(cx, 55);
+      canvas.drawCircle(center, 4.6, Paint()..color = Colors.white);
+      canvas.drawCircle(center, 3.0, Paint()..color = _ink);
+      canvas.drawCircle(
+        center + const Offset(-1, -1),
+        1.1,
+        Paint()..color = Colors.white,
+      );
+    }
+  }
+
+  /// A two-part beak: the upper mandible is fixed, the lower one drops open
+  /// with [MascotFrame.mouthOpen] and the tongue pokes out past it.
+  void _paintBeak(Canvas canvas) {
+    const halfWidth = 7.0;
+    final curveDy = 2.5 * frame.mouthCurve;
+    final openGap = 10 * frame.mouthOpen;
+
+    final upper = Path()
+      ..moveTo(50 - halfWidth, _beakY)
+      ..lineTo(50, _beakY - 4 - curveDy)
+      ..lineTo(50 + halfWidth, _beakY)
+      ..close();
+    canvas.drawPath(
+      upper,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(50, _beakY - 6),
+          Offset(50, _beakY),
+          [_beakLight, _beakDark],
         ),
-        width: _mouthHalfWidth * 1.1,
-        height: openHeight * 0.65 * frame.tongue,
+    );
+
+    final lower = Path()
+      ..moveTo(50 - halfWidth * 0.85, _beakY + openGap)
+      ..lineTo(50, _beakY + 5 + openGap - curveDy)
+      ..lineTo(50 + halfWidth * 0.85, _beakY + openGap)
+      ..close();
+    canvas.drawPath(
+      lower,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(50, _beakY + openGap),
+          Offset(50, _beakY + 5 + openGap),
+          [_beakDark, _beakLight],
+        ),
+    );
+
+    if (frame.tongue > 0.01 && frame.mouthOpen > 0.15) {
+      final tonguePaint = Paint()
+        ..color = _combLight.withValues(alpha: frame.tongue.clamp(0.0, 1.0));
+      final tongueRect = Rect.fromCenter(
+        center: Offset(50, _beakY + openGap + 2),
+        width: halfWidth * 0.9,
+        height: 3 + 4 * frame.tongue,
       );
       canvas.drawRRect(
-        RRect.fromRectAndRadius(tongueRect, Radius.circular(tongueRect.width / 2)),
+        RRect.fromRectAndRadius(tongueRect, const Radius.circular(2)),
         tonguePaint,
       );
     }
@@ -204,21 +358,22 @@ class MascotPainter extends CustomPainter {
   void _paintSweat(Canvas canvas) {
     if (frame.sweat < 0.01) return;
     final sweatPaint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = color.withValues(alpha: (0.85 * frame.sweat).clamp(0.0, 1.0));
+      ..color = const Color(0xFF9BD4FF).withValues(
+        alpha: (0.85 * frame.sweat).clamp(0.0, 1.0),
+      );
     void drop(Offset tip) {
       final path = Path()
         ..moveTo(tip.dx, tip.dy)
-        ..quadraticBezierTo(tip.dx - 4, tip.dy + 8, tip.dx, tip.dy + 12)
-        ..quadraticBezierTo(tip.dx + 4, tip.dy + 8, tip.dx, tip.dy);
+        ..quadraticBezierTo(tip.dx - 3.5, tip.dy + 7, tip.dx, tip.dy + 10)
+        ..quadraticBezierTo(tip.dx + 3.5, tip.dy + 7, tip.dx, tip.dy);
       canvas.drawPath(path, sweatPaint);
     }
 
-    drop(const Offset(79, 38));
-    if (frame.sweat > 0.5) drop(const Offset(85, 50));
+    drop(const Offset(76, 40));
+    if (frame.sweat > 0.5) drop(const Offset(81, 52));
   }
 
   @override
   bool shouldRepaint(MascotPainter oldDelegate) =>
-      frame != oldDelegate.frame || color != oldDelegate.color;
+      frame != oldDelegate.frame || accentColor != oldDelegate.accentColor;
 }

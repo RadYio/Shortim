@@ -388,6 +388,14 @@ class _Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fixed-colour SVG asset, picked for contrast against the active
+    // palette's background (light palettes like Flow/Endurance need the
+    // black mark, dark palettes need the white one) — same reasoning as
+    // the splash/onboarding mark (theme.dart's `AppColors.apply`).
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final markAsset = isDark
+        ? 'assets/logos/shortim-mark-white.svg'
+        : 'assets/logos/shortim-mark-black.svg';
     return Semantics(
       header: true,
       label: 'Shortim',
@@ -395,7 +403,7 @@ class _Wordmark extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset('assets/logos/shortim-mark-white.svg', height: 30),
+          SvgPicture.asset(markAsset, height: 30),
           const SizedBox(width: 10),
           Text('Shortim', style: AppText.wordmark(fontSize: 30)),
         ],

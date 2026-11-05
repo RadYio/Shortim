@@ -113,7 +113,10 @@ class _SplashScreenState extends State<SplashScreen>
                   children: [
                     CustomPaint(
                       size: const Size.square(120),
-                      painter: ShortimMarkPainter(frame: _frame(t)),
+                      painter: ShortimMarkPainter(
+                        frame: _frame(t),
+                        color: AppColors.text,
+                      ),
                     ),
                     const SizedBox(height: 28),
                     Opacity(
@@ -124,7 +127,7 @@ class _SplashScreenState extends State<SplashScreen>
                           'Shortim',
                           style: AppText.wordmark(
                             fontSize: 44,
-                            color: ShortimMarkPainter.brandLight,
+                            color: AppColors.text,
                           ),
                         ),
                       ),

@@ -138,7 +138,7 @@ class _WelcomePage extends StatelessWidget {
             ),
             child: CustomPaint(
               size: const Size.square(72),
-              painter: const ShortimMarkPainter(),
+              painter: ShortimMarkPainter(color: AppColors.text),
             ),
           ),
           const SizedBox(height: 28),

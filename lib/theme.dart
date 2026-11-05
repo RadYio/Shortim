@@ -69,7 +69,7 @@ enum AppPalette {
     'Endurance',
     Brightness.light,
     Color(0xFFFFFFFF),
-    Color(0xFFEDF1F6),
+    Color(0xFFDEE6F0),
     Color(0xFF1D3557),
     Color(0xFFFF7B00),
     Color(0xFF13233A),

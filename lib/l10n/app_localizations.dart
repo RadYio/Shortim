@@ -506,12 +506,6 @@ abstract class AppLocalizations {
   /// **'Enregistrer la série'**
   String get saveSeriesTitle;
 
-  /// No description provided for @nameHint.
-  ///
-  /// In fr, this message translates to:
-  /// **'Muscu1'**
-  String get nameHint;
-
   /// No description provided for @replace.
   ///
   /// In fr, this message translates to:

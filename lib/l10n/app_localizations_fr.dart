@@ -261,9 +261,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get saveSeriesTitle => 'Enregistrer la série';
 
   @override
-  String get nameHint => 'Muscu1';
-
-  @override
   String get replace => 'Remplacer';
 
   @override

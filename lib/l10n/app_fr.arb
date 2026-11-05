@@ -85,7 +85,6 @@
   "@intervalCount": {"placeholders": {"count": {"type": "int"}}},
 
   "saveSeriesTitle": "Enregistrer la série",
-  "nameHint": "Muscu1",
   "replace": "Remplacer",
   "replaceHelper": "Une série porte déjà ce nom : elle sera remplacée.",
   "nameTaken": "Ce nom est déjà utilisé.",

@@ -64,7 +64,13 @@ void main() {
     await tester.tap(find.widgetWithText(OutlinedButton, 'Enregistrer'));
     await tester.pumpAndSettle();
     expect(find.text('Enregistrer la série'), findsOneWidget);
-    expect(find.text('Muscu1'), findsOneWidget); // Placeholder only.
+    // A random funny placeholder: just check the hint isn't empty.
+    final hint = tester
+        .widget<TextField>(find.byType(TextField))
+        .decoration!
+        .hintText;
+    expect(hint, isNotNull);
+    expect(hint, isNotEmpty);
 
     // Empty names cannot be saved.
     final confirm = find.widgetWithText(TextButton, 'Enregistrer');

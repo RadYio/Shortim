@@ -260,9 +260,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveSeriesTitle => 'Save the series';
 
   @override
-  String get nameHint => 'Workout1';
-
-  @override
   String get replace => 'Replace';
 
   @override

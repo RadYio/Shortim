@@ -72,7 +72,6 @@
   "intervalCount": "{count, plural, =1{1 interval} other{{count} intervals}}",
 
   "saveSeriesTitle": "Save the series",
-  "nameHint": "Workout1",
   "replace": "Replace",
   "replaceHelper": "A series already has this name: it will be replaced.",
   "nameTaken": "This name is already used.",

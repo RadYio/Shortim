@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
@@ -48,6 +50,52 @@ class _SeriesNameDialog extends StatefulWidget {
 }
 
 class _SeriesNameDialogState extends State<_SeriesNameDialog> {
+  /// Tongue-in-cheek name ideas shown as the field's hint, one drawn at
+  /// random each time the dialog opens. Humour, not UI copy: kept here
+  /// rather than in the .arb files.
+  static const _funnyPlaceholdersFr = [
+    'Projet Abdos de Fer',
+    'Opération Transpi',
+    'Les Cuisses en Feu',
+    'Mission Essoufflé',
+    'Combat du Mardi',
+    'Défi Jambes Flageolantes',
+    'Le Retour du Squat',
+    'Panique au Gymnase',
+    'Sueur et Gloire',
+    'Les Bras Tremblants',
+    'Expédition Cardio',
+    'Dernière Ligne Droite (ou pas)',
+  ];
+  static const _funnyPlaceholdersEn = [
+    'Project Iron Abs',
+    'Operation Sweat',
+    'Thighs on Fire',
+    'Mission Out of Breath',
+    'Tuesday Showdown',
+    'Jelly Legs Challenge',
+    'Return of the Squat',
+    'Panic at the Gym',
+    'Sweat and Glory',
+    'The Shaky Arms',
+    'Cardio Expedition',
+    'Final Stretch (or Not)',
+  ];
+
+  /// Drawn once per dialog, not per build, so the hint doesn't change while
+  /// the user is typing. The language is picked in [build] (the locale isn't
+  /// readable yet when this initialises).
+  late final int _placeholderIndex = Random().nextInt(
+    _funnyPlaceholdersFr.length,
+  );
+
+  String _placeholder(BuildContext context) {
+    final list = Localizations.localeOf(context).languageCode == 'fr'
+        ? _funnyPlaceholdersFr
+        : _funnyPlaceholdersEn;
+    return list[_placeholderIndex % list.length];
+  }
+
   late final _text = TextEditingController(text: widget.initial)
     ..selection = TextSelection(
       baseOffset: 0,
@@ -89,7 +137,7 @@ class _SeriesNameDialogState extends State<_SeriesNameDialog> {
         textInputAction: TextInputAction.done,
         style: TextStyle(fontSize: 17, color: AppColors.text),
         decoration: InputDecoration(
-          hintText: context.l10n.nameHint,
+          hintText: _placeholder(context),
           helperText: clashes && !renaming ? context.l10n.replaceHelper : null,
           errorText: clashes && renaming ? context.l10n.nameTaken : null,
         ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 import '../models/series.dart';
 import '../models/timer_interval.dart';
+import '../services/series_library.dart';
 import '../services/sound_service.dart';
 import '../services/storage_service.dart';
 import '../theme.dart';
@@ -69,8 +70,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish({required bool launch}) async {
+    final l10n = context.l10n;
     final series = _seriesFor(_chosen ?? _Category.custom);
     await widget.storage.saveDraft(series);
+    // Seed "Mes séries" with the real presets (not "custom") so they are
+    // there straight away; the shell's own SeriesLibrary reads them back
+    // from storage once onboarding is done.
+    final library = SeriesLibrary(widget.storage);
+    await library.load();
+    for (final (category, name) in [
+      (_Category.hiit, l10n.onboardHiit),
+      (_Category.stretch, l10n.onboardStretch),
+      (_Category.breathing, l10n.onboardBreathing),
+    ]) {
+      await library.save(name, _seriesFor(category));
+    }
     await widget.storage.setOnboarded();
     if (!mounted) return;
     widget.onDone();

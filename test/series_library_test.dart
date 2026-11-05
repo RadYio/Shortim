@@ -1,11 +1,15 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shortim/l10n/l10n.dart';
+import 'package:shortim/main.dart';
 import 'package:shortim/models/series.dart';
 import 'package:shortim/models/timer_interval.dart';
+import 'package:shortim/screens/onboarding_screen.dart';
 import 'package:shortim/services/series_library.dart';
 import 'package:shortim/services/storage_service.dart';
+
+import 'fakes.dart';
 
 Series _series(int seconds, {int repeat = 1}) => Series(
   intervals: [TimerInterval(id: 'a', seconds: seconds)],
@@ -89,5 +93,44 @@ void main() {
     final single = Series(intervals: [TimerInterval(id: 'a', seconds: 45)]);
     expect(seriesSummary(fr, single), '1 intervalle · 00:45');
     expect(seriesSummary(en, single), '1 interval · 00:45');
+  });
+
+  testWidgets('finishing onboarding seeds the three presets', (tester) async {
+    configureFonts();
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    var done = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('fr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: OnboardingScreen(
+          sounds: FakeSoundService(),
+          storage: StorageService(),
+          onDone: () => done = true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Commencer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Étirements'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text("Modifier d'abord"));
+    await tester.pumpAndSettle();
+    expect(done, isTrue);
+
+    final library = SeriesLibrary(StorageService());
+    await tester.runAsync(library.load);
+    expect(library.items.map((s) => s.name).toSet(), {
+      'HIIT',
+      'Étirements',
+      'Respiration',
+    });
+    expect(library.items, hasLength(3));
+    expect(library.byName('HIIT')!.series.rounds, 8);
   });
 }

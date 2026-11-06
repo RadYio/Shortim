@@ -184,6 +184,82 @@ void main() {
       clock.advance(const Duration(seconds: 12));
       expect(engine.tick(), [const IntervalChanged(1)]);
     });
+
+    test(
+      'SeriesFinished is never lost when a huge gap skips many intervals '
+      'at once (QA: app throttled hard in background)',
+      () {
+        final engine = TimerEngine(
+          seriesOf([5, 5, 5, 5, 5]),
+          clock: clock.call,
+        )..start();
+        // 10 minutes of background throttling, series is only 25 s long:
+        // every interval boundary is skipped over in a single tick().
+        clock.advance(const Duration(minutes: 10));
+        final events = engine.tick();
+        expect(events, [const SeriesFinished()]);
+        expect(engine.status, TimerStatus.finished);
+        // No stray beep/IntervalChanged snuck in ahead of the finish.
+        expect(events, hasLength(1));
+      },
+    );
+
+    test(
+      'a single huge background gap never emits more than one beep '
+      '(QA: resume after hours should not fire a burst of beeps)',
+      () {
+        final engine = TimerEngine(
+          seriesOf([10, 10, 10, 10]),
+          clock: clock.call,
+        )..start();
+        // Jump straight into the countdown window of a later interval: in
+        // real life this is the single tick() that fires once the app
+        // comes back to foreground after being suspended for hours.
+        clock.advance(const Duration(seconds: 38));
+        final events = engine.tick();
+        expect(events, [const IntervalChanged(3), const CountdownBeep(2)]);
+        expect(events.whereType<CountdownBeep>(), hasLength(1));
+      },
+    );
+  });
+
+  group('pause at an interval boundary (QA: UI race on pause)', () {
+    test(
+      'pausing exactly when an interval changes applies the change before '
+      'freezing, with no leftover/duplicate event on the next tick',
+      () {
+        final engine = TimerEngine(seriesOf([5, 10]), clock: clock.call)
+          ..start();
+        // The pause lands on the exact instant the interval flips.
+        clock.advance(const Duration(seconds: 5));
+        final pauseEvents = engine.pause();
+        expect(pauseEvents, [const IntervalChanged(1)]);
+        expect(engine.status, TimerStatus.paused);
+        // Snapshot already reflects the new interval, not the old one.
+        expect(engine.snapshot.intervalIndex, 1);
+        expect(engine.snapshot.remaining, const Duration(seconds: 10));
+
+        // Resuming and ticking again must not replay that transition.
+        engine.resume();
+        clock.advance(const Duration(seconds: 1));
+        expect(engine.tick(), isEmpty);
+      },
+    );
+
+    test(
+      'pausing one tick after the boundary (ticker got there first) does '
+      'not re-emit the same IntervalChanged',
+      () {
+        final engine = TimerEngine(seriesOf([5, 10]), clock: clock.call)
+          ..start();
+        clock.advance(const Duration(seconds: 5));
+        // Simulates RunController's periodic ticker firing just before the
+        // user's pause tap is handled.
+        expect(engine.tick(), [const IntervalChanged(1)]);
+        expect(engine.pause(), isEmpty);
+        expect(engine.snapshot.intervalIndex, 1);
+      },
+    );
   });
 
   group('series repetition', () {

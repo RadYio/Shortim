@@ -13,74 +13,15 @@ animations, séries sauvegardées, réglages, multilingue, sons).
 - Écran de saisie (intervalles min/sec, +, édition/suppression/réorg,
   jusqu'à 30, choix répétition) et écran d'exécution (décompte, prochain
   intervalle, pause, arrêt) fonctionnels.
-- Visuel actuel : bleu marine / blanc (**à remplacer entièrement par la DA
-  ci-dessous**).
 
-## 1. Direction artistique (héritée du repo `app-chrono`, adaptée à Shortim)
+## 1. Direction artistique : design system Essef
+**Source de vérité : `~/Developer/essef-design-system/DESIGN.md`** (tokens Flutter : `essef_tokens.dart`). Lire avant tout travail UI et le mettre à jour dans le même travail que toute évolution visuelle (exigence d'Allan). Zéro legacy hors demande explicite d'Allan (voir « Don't » du DESIGN.md : accent réglable, bleu marine v1, Oswald/Bebas, nom « Chrono », etc.).
 
-### Ambiance
-Dark mode premium, quasi-noir, feel "tech éditorial" : grosse typo serif pour
-les titres/wordmark (effet magazine/luxe), texte body sans-serif neutre,
-labels en monospace majuscules. Beaucoup d'air, cartes sobres à bordure fine,
-coins arrondis.
-
-### Couleurs (tokens UI)
-- `ink` = `#050506` — fond principal (quasi noir)
-- `cream` = `#f4f1ea` — accent clair chaud (CTA primaire, anneau de
-  progression), défaut de l'accent réglable
-- Gris "brand" (texte secondaire / bordures) : `brand-300 #d4d4d8`,
-  `brand-400 #a1a1aa`, `brand-500 #71717a`, `brand-600 #52525b`,
-  `brand-700 #3f3f46`
-- Texte body clair : `#F7F7F8` (blanc cassé, proche `oklch(0.967 0.001 286.375)`)
-- Pas de couleur vive dominante. **Accent réglable dans les Réglages** :
-  crème (défaut), or mat `#c9a35a`, corail doux `#e8846b`, teal profond
-  `#4fb6a3` — jamais de couleur saturée flashy.
-- Assets de marque (logo/icône, déjà dans `assets/logos/`) : couleurs figées
-  `#0A0A0A` / `#F2F2F0`, volontairement différentes des tokens UI ci-dessus.
-
-### Typographie
-- Wordmark / splash / à-propos : **Playfair Display** 400, letter-spacing
-  légèrement négatif (package `google_fonts`, pas de fallback système).
-- Décompte principal (gros chiffres MM:SS) : **monospace tabulaire**
-  (JetBrains Mono ou Space Mono, 600/700) — cohérent avec la famille
-  "labels monospace" de la DA, évite que les chiffres sautent en largeur.
-  *(Décision actée : l'option "Oswald/Bebas Neue" envisagée avant la
-  découverte de cette DA est abandonnée pour rester cohérent avec le système
-  existant.)*
-- Corps de texte / UI : sans-serif système, neutre.
-- Labels/badges ("INTERVALLE 3/8", "TOUR 2/3") : monospace, MAJUSCULES,
-  letter-spacing large, `brand-400`.
-
-### Composants
-- Boutons pill (radius complet). Primaire = fond crème + texte `ink`.
-  Secondaire = outline crème/gris, fond transparent.
-- Cartes (ligne d'intervalle, carte série sauvegardée) : fond légèrement plus
-  clair que `ink`, bordure 1px subtile, coins très arrondis, padding généreux.
-
-### Motion (tokens)
-- Durées : `fast=150ms`, `base=250ms`, `slow=520ms`.
-- Easings : `brand = Cubic(.22,1,.36,1)` (doux, transitions courantes),
-  `emphasis = Cubic(.34,1.56,.64,1)` (léger rebond, micro-interactions qui
-  doivent se sentir vivantes).
-- Animations fluides et marquées mais **sobres** : pas de confettis ni de
-  couleurs flashy, l'effort visuel va dans le mouvement (transitions, anneau,
-  logo), jamais dans des effets gratuits qui nuisent à la lisibilité du temps.
-
-### Logo Shortim
-`assets/logos/shortim-*.svg` (déjà présents dans le repo, dérivés de
-`app-chrono`, wordmark "Chrono"→"Shortim") :
-- `shortim-mark-*.svg` — mark seul (anneau + aiguille + couronne, horloge
-  monoligne, `viewBox 0 0 100 100`, `stroke-width 9`, paths `#ring`/`#crown`/
-  `#hand`, `pathLength="100"`)
-- `shortim-mark-animated-*.svg` — version "draw-on" CSS (référence de
-  timeline uniquement, à reproduire nativement) : 0–1.1s anneau se dessine,
-  1.1–1.5s couronne apparaît, ~1.9s "clic" (couronne qui plonge, ticks qui
-  flashent, aiguille qui se dessine), tient, fade, boucle (boucle non
-  nécessaire en app, une seule lecture au splash suffit).
-- `shortim-lockup-*.svg` / `shortim-lockup-essef-*.svg` — mark + wordmark
-  (+ signature "Essef" optionnelle)
-- `shortim-app-icon-1024.svg` / `-animated-1024.svg` — icône app (fond
-  `#0A0A0A`, mark `#F2F2F0`)
+Spécifique à Shortim :
+- **Palettes** (`lib/theme.dart`, `AppPalette`) : couple fond / typographie nommé (Sprint, Gym Floor, Endurance, Flow), choisi dans Réglages via une bulle coupée en diagonale. Remplace l'ancienne « couleur d'accent ». Les écrans de marque (splash, lockup) restent monochromes.
+- **Typo** : Playfair Display 400 (wordmark, titre d'écran uniquement), sans système pour l'UI, JetBrains Mono tabulaire pour le décompte et les labels. Polices embarquées dans `assets/google_fonts/`.
+- **Logo** : `assets/logos/shortim-*.svg` (mark horloge anneau + aiguille + couronne, lockups, `-essef`, app icon fond `#0A0A0A`, mark `#F2F2F0`). Splash = timeline du mark animé reproduite en `CustomPainter`.
+- **Mascotte** sous le décompte (`lib/widgets/mascot*.dart`), couleurs dérivées de la palette courante.
 
 ## 2. Animations à implémenter (vraies, pilotées par `AnimationController`)
 Exigence utilisateur : "plein d'animations dans tous les sens", mais fluides
@@ -107,7 +48,7 @@ et sobres (pas de `AnimatedContainer` par défaut non réglé, pas de confettis)
 
 ## 3. Séries sauvegardées ("Mes séries")
 - Bouton **"Enregistrer"** sur l'écran de saisie (distinct de "Démarrer") :
-  dialogue pour nommer la série (placeholder type "Muscu1" à titre d'exemple,
+  dialogue pour nommer la série (placeholder = nom drôle aléatoire FR/EN,
   l'utilisateur tape ce qu'il veut). Démarrer sans enregistrer reste possible.
 - Écran **"Mes séries"** : liste des séries sauvegardées (nom + résumé "8
   intervalles · 12:30 · ×3"), actions lancer / renommer / supprimer. Charger
@@ -115,13 +56,13 @@ et sobres (pas de `AnimatedContainer` par défaut non réglé, pas de confettis)
 - Persistance locale (`shared_preferences` JSON ou fichier) :
   `{name, intervals, loopMode, loopCount}[]`.
 
-## 4. Écran Réglages (icône roue crantée)
+## 4. Écran Réglages (menu flottant en bas)
 - **Langue** FR/EN : auto-détectée depuis le système au premier lancement,
   override manuel persistant. Tous les textes UI via clés de traduction
   (`flutter gen-l10n` ou `easy_localization`), aucun texte en dur.
 - **Son** : on/off global + choix de thème sonore (section 5).
 - **Vibrations/haptique** : on/off (bips, changement d'intervalle, fin).
-- **Couleur d'accent** : sélecteur parmi les 4 teintes de la section 1.
+- **Palette** : sélecteur parmi les 4 palettes de la section 1 (bulle diagonale fond / typographie).
 - **Gestion des séries sauvegardées** : renommer/supprimer (peut réutiliser
   l'écran "Mes séries" en mode édition).
 - Contrairement au reste de l'app (très sobre en texte), cet écran peut être

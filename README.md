@@ -93,7 +93,7 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
   et vibrations sont lus **au moment de chaque signal** par `RunController`,
   donc un changement en cours de série s'applique tout de suite. Vibrations :
   légère au bip, moyenne au changement, forte à la fin. Choisir un thème le
-  fait écouter. Changement d'accent animé (transition de thème `slow`).
+  fait écouter. Changement de palette animé (transition de thème `slow`).
   « Gérer mes séries » réutilise l'écran « Mes séries » ; une série choisie
   remonte jusqu'à l'écran de saisie.
 - **Langue** : `flutter gen-l10n` (`l10n.yaml`, ARB dans `lib/l10n/`, fichiers
@@ -103,11 +103,11 @@ assets/sounds/       bips WAV générés par tool/generate_sounds.py
   `MaterialApp` se reconstruit avec la nouvelle locale). Aucun texte visible
   en dur dans les widgets (hors marque « Shortim » et chiffres).
 - `wakelock_plus` garde l'écran allumé pendant le run.
-- **DA** (`lib/theme.dart`) : tokens couleurs/motion/typo de `CLAUDE.md` §1.
+- **DA** (`lib/theme.dart`) : tokens du design system Essef (`CLAUDE.md` §1).
   Polices via `google_fonts` mais **embarquées** dans `assets/google_fonts/`
   (Playfair Display 400, JetBrains Mono 400/500/700, licences OFL incluses)
   avec `allowRuntimeFetching = false` : aucun accès réseau, rendu identique
-  hors ligne et en test. Accent réglable prévu via `buildTheme(accent:)`.
+  hors ligne et en test. Palettes via `buildTheme(palette:)`.
 - **Splash** (`lib/screens/splash_screen.dart`) : timeline du mark animé
   reproduite en `CustomPainter` (`lib/widgets/shortim_mark.dart`, mêmes paths
   que le SVG, tracé partiel via `PathMetric.extractPath`). Anneau 0–1,1 s
